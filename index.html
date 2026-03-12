@@ -330,6 +330,15 @@
             color: var(--text-dim);
         }
 
+        .rot-pos.draggable {
+            cursor: grab;
+        }
+
+        .rot-pos.drag-over {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px var(--accent-glow);
+        }
+
         .rot-pos.server-slot {
             border-color: var(--yellow);
             background: var(--yellow-soft);
@@ -984,8 +993,8 @@
             <button class="btn-primary mt-16" onclick="initializeTournament()">Start / Reset Tournament</button>
         </div>
 
-        <!-- TOURNAMENT MATCHES -->
-        <div id="tournament"></div>
+        <!-- ONGOING MATCH (top in viewer mode) -->
+        <div id="ongoingMatch"></div>
 
         <!-- STANDINGS -->
         <div id="standingsCard" class="card" style="display:none;">
@@ -995,6 +1004,9 @@
                 <button class="btn-primary" onclick="buildFinalMatch()">Generate Final (Top 2)</button>
             </div>
         </div>
+
+        <!-- OTHER TOURNAMENT MATCHES -->
+        <div id="tournament"></div>
 
         <!-- FINAL -->
         <div id="finalCard" class="card" style="display:none;">
@@ -1055,6 +1067,7 @@
         var FINAL_MATCH_ID = "F0";
         var isScorer = false;
         var localUpdate = false; // flag to skip listener re-renders during local writes
+        var rotationDragState = null;
 
         // =========================================================
         // MODE MANAGEMENT
@@ -1174,9 +1187,20 @@
 
         function rebuildAllMatchUI() {
             var tDiv = document.getElementById("tournament");
+            var ongoingDiv = document.getElementById("ongoingMatch");
             if (tDiv) tDiv.innerHTML = "";
+            if (ongoingDiv) ongoingDiv.innerHTML = "";
 
             if (!schedule || !schedule.length) return;
+
+            var ongoingMatchId = null;
+            schedule.forEach(function (s) {
+                var m = matchData[s.id];
+                if (!m) return;
+                if ((m.scoreA + m.scoreB) > 0 && (!ongoingMatchId || (m.rallyCounter || 0) > (matchData[ongoingMatchId].rallyCounter || 0))) {
+                    ongoingMatchId = s.id;
+                }
+            });
 
             schedule.forEach(function (s) {
                 var matchId = s.id;
@@ -1184,7 +1208,8 @@
                     matchData[matchId] = createEmptyMatchState(matchId, s.team1Index, s.team2Index);
                 }
                 var html = buildMatchCardHTML(matchId, s.team1Index, s.team2Index, false);
-                tDiv.insertAdjacentHTML("beforeend", html);
+                if (matchId === ongoingMatchId && ongoingDiv) ongoingDiv.insertAdjacentHTML("beforeend", html);
+                else if (tDiv) tDiv.insertAdjacentHTML("beforeend", html);
 
                 // Ensure per-match active rosters exist (already set if coming from Firebase)
                 ensureActivePlayers(matchId);
@@ -1343,6 +1368,7 @@
                 scoreA: 0, scoreB: 0,
                 rotationA: [1, 2, 3, 4, 5, 6],
                 rotationB: [1, 2, 3, 4, 5, 6],
+                rallyHistory: [],
                 serverTeam: null,
                 serverPlayerA: null,
                 serverPlayerB: null,
@@ -1453,11 +1479,13 @@
                 "    <div class='rotation-label'>" + escHtml(t1.name) + " Rotation</div>" +
                 "    <div id='rotCourt_" + matchId + "_A' class='rotation-court'></div>" +
                 "    <button class='btn-rotate scorer-only' onclick=\"manualRotate('" + matchId + "','A')\">↻ Rotate</button>" +
+                "    <button class='btn-rotate scorer-only' onclick=\"undoLastPoint('" + matchId + "','A')\">↺ Undo " + escHtml(t1.name) + " Point</button>" +
                 "  </div>" +
                 "  <div class='rotation-section'>" +
                 "    <div class='rotation-label'>" + escHtml(t2.name) + " Rotation</div>" +
                 "    <div id='rotCourt_" + matchId + "_B' class='rotation-court'></div>" +
                 "    <button class='btn-rotate scorer-only' onclick=\"manualRotate('" + matchId + "','B')\">↻ Rotate</button>" +
+                "    <button class='btn-rotate scorer-only' onclick=\"undoLastPoint('" + matchId + "','B')\">↺ Undo " + escHtml(t2.name) + " Point</button>" +
                 "  </div>" +
 
                 // Server selection (scorer only) — populated by renderServerButtons()
@@ -1512,18 +1540,58 @@
 
             var pos4 = rot[3], pos3 = rot[2], pos2 = rot[1];
             var pos5 = rot[4], pos1 = rot[0], pos6 = rot[5];
+            function posCell(courtPos, label, isServerSlot) {
+                var classes = "rot-pos" + (isServerSlot ? " server-slot" : "") + (isScorer ? " draggable" : "");
+                if (!isScorer) return "<div class='" + classes + "'>" + label + "</div>";
+                return "<div class='" + classes + "' draggable='true' ondragstart=\"onRotationDragStart(event,'" + matchId + "','" + teamKey + "'," + courtPos + ")\" ondragover='onRotationDragOver(event)' ondragleave='onRotationDragLeave(event)' ondrop=\"onRotationDrop(event,'" + matchId + "','" + teamKey + "'," + courtPos + ")\">" + label + "</div>";
+            }
 
             container.innerHTML =
                 "<div class='rot-row'>" +
-                "  <div class='rot-pos'>" + slotLabel(pos4) + "</div>" +
-                "  <div class='rot-pos'>" + slotLabel(pos3) + "</div>" +
-                "  <div class='rot-pos'>" + slotLabel(pos2) + "</div>" +
+                "  " + posCell(4, slotLabel(pos4), false) +
+                "  " + posCell(3, slotLabel(pos3), false) +
+                "  " + posCell(2, slotLabel(pos2), false) +
                 "</div>" +
                 "<div class='rot-row'>" +
-                "  <div class='rot-pos'>" + slotLabel(pos5) + "</div>" +
-                "  <div class='rot-pos server-slot'>" + slotLabel(pos1) + "</div>" +
-                "  <div class='rot-pos'>" + slotLabel(pos6) + "</div>" +
+                "  " + posCell(5, slotLabel(pos5), false) +
+                "  " + posCell(1, slotLabel(pos1), true) +
+                "  " + posCell(6, slotLabel(pos6), false) +
                 "</div>";
+        }
+
+        function onRotationDragStart(event, matchId, teamKey, courtPos) {
+            if (!isScorer) return;
+            rotationDragState = { matchId: matchId, teamKey: teamKey, courtPos: courtPos };
+            if (event.dataTransfer) event.dataTransfer.effectAllowed = "move";
+        }
+
+        function onRotationDragOver(event) {
+            event.preventDefault();
+            event.currentTarget.classList.add("drag-over");
+        }
+
+        function onRotationDragLeave(event) {
+            event.currentTarget.classList.remove("drag-over");
+        }
+
+        function onRotationDrop(event, matchId, teamKey, targetPos) {
+            event.preventDefault();
+            event.currentTarget.classList.remove("drag-over");
+            if (!isScorer || !rotationDragState) return;
+            if (rotationDragState.matchId !== matchId || rotationDragState.teamKey !== teamKey) return;
+            var fromPos = rotationDragState.courtPos;
+            rotationDragState = null;
+            if (fromPos === targetPos) return;
+            var m = matchData[matchId]; if (!m) return;
+            var rot = (teamKey === "A") ? m.rotationA : m.rotationB;
+            var fromIdx = fromPos - 1;
+            var toIdx = targetPos - 1;
+            var temp = rot[fromIdx];
+            rot[fromIdx] = rot[toIdx];
+            rot[toIdx] = temp;
+            if (teamKey === "A") m.rotationA = rot; else m.rotationB = rot;
+            renderRotation(matchId, teamKey);
+            saveToFirebase();
         }
 
         function manualRotate(matchId, teamKey) {
@@ -1548,6 +1616,18 @@
             if (delta === 0) return;
 
             if (delta > 0) {
+                if (!m.rallyHistory) m.rallyHistory = [];
+                m.rallyHistory.push({
+                    scoringTeam: teamKey,
+                    prevScoreA: m.scoreA,
+                    prevScoreB: m.scoreB,
+                    prevRotationA: (m.rotationA || []).slice(),
+                    prevRotationB: (m.rotationB || []).slice(),
+                    prevServerTeam: m.serverTeam,
+                    prevServerPlayerA: m.serverPlayerA,
+                    prevServerPlayerB: m.serverPlayerB,
+                    prevRallyCounter: m.rallyCounter
+                });
                 if (teamKey === "A") m.scoreA += delta; else m.scoreB += delta;
                 m.rallyCounter += 1;
                 logServiceEvent(matchId, teamKey);
@@ -1555,8 +1635,8 @@
                     manualRotateInternal(matchId, teamKey);
                 }
             } else {
-                if (teamKey === "A") m.scoreA = Math.max(0, m.scoreA + delta);
-                else m.scoreB = Math.max(0, m.scoreB + delta);
+                undoLastPoint(matchId, teamKey);
+                return;
             }
 
             refreshScoreUI(matchId);
@@ -1574,8 +1654,7 @@
             rot = rotateArray(rot);
             if (teamKey === "A") m.rotationA = rot; else m.rotationB = rot;
 
-            var teamIndex = (teamKey === "A") ? m.team1Index : m.team2Index;
-            var players = teams[teamIndex].players || [];
+            var players = (teamKey === "A") ? (m.activePlayersA || teams[m.team1Index].players || []) : (m.activePlayersB || teams[m.team2Index].players || []);
             var pos1Num = rot[0];
             var newServerPlayer = players[pos1Num - 1] || null;
             m.serverTeam = teamKey;
@@ -1584,6 +1663,36 @@
 
             renderRotation(matchId, teamKey);
             highlightServerButton(matchId);
+        }
+
+        function undoLastPoint(matchId, teamKey) {
+            if (!isScorer) return;
+            var m = matchData[matchId]; if (!m) return;
+            var history = m.rallyHistory || [];
+            if (!history.length) return;
+            var last = history[history.length - 1];
+            if (teamKey && last.scoringTeam !== teamKey) {
+                alert("Most recent point belongs to the other team. Undo that side first.");
+                return;
+            }
+            history.pop();
+            m.scoreA = last.prevScoreA;
+            m.scoreB = last.prevScoreB;
+            m.rotationA = last.prevRotationA;
+            m.rotationB = last.prevRotationB;
+            m.serverTeam = last.prevServerTeam;
+            m.serverPlayerA = last.prevServerPlayerA;
+            m.serverPlayerB = last.prevServerPlayerB;
+            m.rallyCounter = last.prevRallyCounter;
+            if (m.serviceLog && m.serviceLog.length) m.serviceLog.pop();
+
+            refreshScoreUI(matchId);
+            renderRotation(matchId, "A");
+            renderRotation(matchId, "B");
+            highlightServerButton(matchId);
+            updateStandings();
+            renderServiceLogTable(matchId);
+            saveToFirebase();
         }
 
         function setServer(matchId, teamKey, playerName) {
@@ -1886,8 +1995,11 @@
 
             renderRotation(FINAL_MATCH_ID, "A");
             renderRotation(FINAL_MATCH_ID, "B");
+            refreshScoreUI(FINAL_MATCH_ID);
             renderServerButtons(FINAL_MATCH_ID);
             renderServiceLogTable(FINAL_MATCH_ID);
+            updateSubUI(FINAL_MATCH_ID, "A");
+            updateSubUI(FINAL_MATCH_ID, "B");
             saveToFirebase();
         }
         // =========================================================
