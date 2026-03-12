@@ -550,6 +550,147 @@
             font-weight: 600;
         }
 
+        /* Match selector bar (scorer mode) */
+        .match-selector-bar {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 12px 16px;
+            margin-bottom: 16px;
+        }
+
+        .match-selector-label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-dim);
+            white-space: nowrap;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+
+        .match-selector-select {
+            flex: 1;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            font-family: var(--font);
+            font-size: 0.9rem;
+            padding: 8px 12px;
+            cursor: pointer;
+            outline: none;
+            transition: border-color 0.15s;
+        }
+
+        .match-selector-select:focus {
+            border-color: var(--accent);
+        }
+
+        /* Compact (non-active) match summary card */
+        .compact-match-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 12px 16px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            transition: border-color 0.15s;
+        }
+
+        .compact-match-card:hover {
+            border-color: var(--accent);
+        }
+
+        .compact-match-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .compact-match-title {
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-bottom: 6px;
+        }
+
+        .compact-teams {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .compact-team-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        .compact-team-name {
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: var(--text);
+            flex: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .compact-score {
+            font-family: var(--mono);
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text);
+            min-width: 28px;
+            text-align: right;
+        }
+
+        .compact-sets {
+            font-family: var(--mono);
+            font-size: 0.72rem;
+            color: var(--text-dim);
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            padding: 2px 10px;
+            white-space: nowrap;
+            flex-shrink: 0;
+            align-self: center;
+        }
+
+        .compact-status {
+            font-size: 0.68rem;
+            color: var(--text-dim);
+            margin-top: 4px;
+            font-style: italic;
+        }
+
+        /* Active match label in viewer mode */
+        .active-match-label {
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-bottom: 8px;
+        }
+
+        .other-matches-label {
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin: 16px 0 8px;
+        }
+
         /* Sets display */
         .sets-bar {
             display: flex;
@@ -1052,6 +1193,14 @@
 
         <div id="modeBanner" class="mode-banner viewer" style="display:none;"></div>
 
+        <!-- MATCH SELECTOR (scorer only) -->
+        <div id="matchSelectorBar" class="match-selector-bar scorer-only" style="display:none;">
+            <label class="match-selector-label" for="activeMatchSelect">Active Match:</label>
+            <select id="activeMatchSelect" class="match-selector-select" onchange="setActiveMatch(this.value)">
+                <option value="">— Select a match to score —</option>
+            </select>
+        </div>
+
         <!-- SETUP (scorer only) -->
         <div id="setupCard" class="card scorer-only">
             <h2>Setup Tournament</h2>
@@ -1145,6 +1294,7 @@
         var schedule = [];
         var matchData = {};
         var autoRotate = true;
+        var activeMatchId = null; // which match is currently being played (set by scorer)
         var LEAGUE_PREFIX = "L";
         var FINAL_MATCH_ID = "F0";
         var isScorer = false;
@@ -1215,6 +1365,7 @@
                 schedule: schedule,
                 matchData: matchData,
                 autoRotate: autoRotate,
+                activeMatchId: activeMatchId,
                 timestamp: firebase.database.ServerValue.TIMESTAMP
             };
             dbRef.set(state).then(function () {
@@ -1261,6 +1412,7 @@
             if (data.schedule) schedule = data.schedule;
             if (data.matchData) matchData = data.matchData;
             if (data.autoRotate !== undefined) autoRotate = data.autoRotate;
+            if (data.activeMatchId !== undefined) activeMatchId = data.activeMatchId;
 
             // Rebuild UI
             renderTeamSetup();
@@ -1275,62 +1427,96 @@
 
             if (!schedule || !schedule.length) return;
 
-            var ongoingMatchId = null;
-            schedule.forEach(function (s) {
-                var m = matchData[s.id];
-                if (!m) return;
-                if ((m.scoreA + m.scoreB) > 0 && (!ongoingMatchId || (m.rallyCounter || 0) > (matchData[ongoingMatchId].rallyCounter || 0))) {
-                    ongoingMatchId = s.id;
-                }
-            });
+            // Show/hide match selector bar for scorer
+            var selectorBar = document.getElementById("matchSelectorBar");
+            if (selectorBar) selectorBar.style.display = isScorer ? "flex" : "none";
+            if (isScorer) populateMatchSelector();
 
-            schedule.forEach(function (s) {
-                var matchId = s.id;
+            // Verify activeMatchId still refers to a real match
+            var validIds = schedule.map(function (s) { return s.id; });
+            if (matchData[FINAL_MATCH_ID]) validIds.push(FINAL_MATCH_ID);
+            if (activeMatchId && validIds.indexOf(activeMatchId) < 0) activeMatchId = null;
+
+            // Helper: fully render a match card into a container element
+            function renderFullCard(container, matchId, t1Index, t2Index, isFinal) {
                 if (!matchData[matchId]) {
-                    matchData[matchId] = createEmptyMatchState(matchId, s.team1Index, s.team2Index);
+                    matchData[matchId] = createEmptyMatchState(matchId, t1Index, t2Index);
                 }
-                var html = buildMatchCardHTML(matchId, s.team1Index, s.team2Index, false);
-                if (matchId === ongoingMatchId && ongoingDiv) ongoingDiv.insertAdjacentHTML("beforeend", html);
-                else if (tDiv) tDiv.insertAdjacentHTML("beforeend", html);
-
-                // Ensure per-match active rosters exist (already set if coming from Firebase)
                 ensureActivePlayers(matchId);
-                // Ensure set-tracking fields exist (backwards-compat with old Firebase data)
                 ensureSetState(matchId);
+
+                var html = buildMatchCardHTML(matchId, t1Index, t2Index, isFinal);
+                container.insertAdjacentHTML("beforeend", html);
 
                 renderRotation(matchId, "A");
                 renderRotation(matchId, "B");
                 refreshScoreUI(matchId);
                 renderServerButtons(matchId);
                 renderServiceLogTable(matchId);
-
-                // Render substitution panels (scorer-interactive)
                 updateSubUI(matchId, "A");
                 updateSubUI(matchId, "B");
 
-                // Re-render sub logs
                 var m = matchData[matchId];
-                if (m.subsA) m.subsA.forEach(function (sub) {
-                    var logDiv = document.getElementById("subLog_" + matchId + "_A");
-                    if (logDiv) {
-                        var entry = document.createElement("div");
-                        entry.textContent = sub.playerOut
-                            ? "• " + sub.playerOut + " ⇄ " + sub.playerIn + "  (" + sub.time + ")"
-                            : "• " + sub.player + " at " + sub.time;
-                        logDiv.appendChild(entry);
-                    }
+                ["A", "B"].forEach(function (tk) {
+                    var subs = (tk === "A") ? m.subsA : m.subsB;
+                    if (!subs) return;
+                    subs.forEach(function (sub) {
+                        var logDiv = document.getElementById("subLog_" + matchId + "_" + tk);
+                        if (logDiv) {
+                            var entry = document.createElement("div");
+                            entry.textContent = sub.playerOut
+                                ? "• " + sub.playerOut + " ⇄ " + sub.playerIn + "  (" + sub.time + ")"
+                                : "• " + sub.player + " at " + sub.time;
+                            logDiv.appendChild(entry);
+                        }
+                    });
                 });
-                if (m.subsB) m.subsB.forEach(function (sub) {
-                    var logDiv = document.getElementById("subLog_" + matchId + "_B");
-                    if (logDiv) {
-                        var entry = document.createElement("div");
-                        entry.textContent = sub.playerOut
-                            ? "• " + sub.playerOut + " ⇄ " + sub.playerIn + "  (" + sub.time + ")"
-                            : "• " + sub.player + " at " + sub.time;
-                        logDiv.appendChild(entry);
+            }
+
+            // Render active match (full card) at the top
+            if (activeMatchId && matchData[activeMatchId] !== undefined) {
+                var activeSchedule = null;
+                schedule.forEach(function (s) { if (s.id === activeMatchId) activeSchedule = s; });
+                var isFinalActive = (activeMatchId === FINAL_MATCH_ID);
+                var aT1 = isFinalActive ? matchData[FINAL_MATCH_ID].team1Index : (activeSchedule ? activeSchedule.team1Index : 0);
+                var aT2 = isFinalActive ? matchData[FINAL_MATCH_ID].team2Index : (activeSchedule ? activeSchedule.team2Index : 1);
+
+                if (ongoingDiv) {
+                    var labelDiv = document.createElement("div");
+                    labelDiv.className = "active-match-label";
+                    labelDiv.textContent = "Current Match";
+                    ongoingDiv.appendChild(labelDiv);
+                    renderFullCard(ongoingDiv, activeMatchId, aT1, aT2, isFinalActive);
+                }
+            }
+
+            // Render other league matches — compact summary cards (or full if no active match set)
+            var hasOtherMatches = false;
+            schedule.forEach(function (s) {
+                if (s.id === activeMatchId) return; // already rendered above
+                if (!matchData[s.id]) {
+                    matchData[s.id] = createEmptyMatchState(s.id, s.team1Index, s.team2Index);
+                }
+                ensureSetState(s.id);
+                hasOtherMatches = true;
+                if (tDiv) {
+                    if (activeMatchId) {
+                        // Show compact summary
+                        tDiv.insertAdjacentHTML("beforeend", buildMatchSummaryHTML(s.id, s.team1Index, s.team2Index, false));
+                    } else {
+                        // No active match chosen: show full cards for all
+                        renderFullCard(tDiv, s.id, s.team1Index, s.team2Index, false);
                     }
-                });
+                }
             });
+
+            // Add "Other Matches" section label when there's an active match and other matches exist
+            if (activeMatchId && hasOtherMatches && tDiv) {
+                var otherLabel = document.createElement("div");
+                otherLabel.className = "other-matches-label";
+                otherLabel.textContent = "Other Matches";
+                tDiv.insertBefore(otherLabel, tDiv.firstChild);
+            }
 
             // Standings
             var standCard = document.getElementById("standingsCard");
@@ -1339,23 +1525,31 @@
                 updateStandings();
             }
 
-            // Final
-            if (matchData[FINAL_MATCH_ID]) {
-                var m = matchData[FINAL_MATCH_ID];
+            // Final match
+            if (matchData[FINAL_MATCH_ID] && activeMatchId !== FINAL_MATCH_ID) {
+                var mf = matchData[FINAL_MATCH_ID];
                 var finalCard = document.getElementById("finalCard");
                 var finalContent = document.getElementById("finalContent");
                 var finalLabel = document.getElementById("finalTeamsLabel");
                 if (finalCard && finalContent) {
-                    var html = buildMatchCardHTML(FINAL_MATCH_ID, m.team1Index, m.team2Index, true);
-                    finalContent.innerHTML = html;
-                    finalLabel.textContent = teams[m.team1Index].name + " vs " + teams[m.team2Index].name;
+                    if (activeMatchId) {
+                        // Show compact summary for final too
+                        finalContent.innerHTML = buildMatchSummaryHTML(FINAL_MATCH_ID, mf.team1Index, mf.team2Index, true);
+                    } else {
+                        var html = buildMatchCardHTML(FINAL_MATCH_ID, mf.team1Index, mf.team2Index, true);
+                        finalContent.innerHTML = html;
+                        renderRotation(FINAL_MATCH_ID, "A");
+                        renderRotation(FINAL_MATCH_ID, "B");
+                        refreshScoreUI(FINAL_MATCH_ID);
+                        renderServerButtons(FINAL_MATCH_ID);
+                        renderServiceLogTable(FINAL_MATCH_ID);
+                    }
+                    finalLabel.textContent = teams[mf.team1Index].name + " vs " + teams[mf.team2Index].name;
                     finalCard.style.display = "block";
-                    renderRotation(FINAL_MATCH_ID, "A");
-                    renderRotation(FINAL_MATCH_ID, "B");
-                    refreshScoreUI(FINAL_MATCH_ID);
-                    renderServerButtons(FINAL_MATCH_ID);
-                    renderServiceLogTable(FINAL_MATCH_ID);
                 }
+            } else if (!matchData[FINAL_MATCH_ID]) {
+                var fcHide = document.getElementById("finalCard");
+                if (fcHide) fcHide.style.display = "none";
             }
         }
 
@@ -1420,6 +1614,7 @@
 
             schedule = generateSchedule(rounds);
             matchData = {};
+            activeMatchId = null;
             clearFinalUI();
             buildLeagueMatches();
 
@@ -1526,6 +1721,84 @@
                 renderRotation(mid, "A");
                 renderRotation(mid, "B");
             });
+        }
+
+        // =========================================================
+        // ACTIVE MATCH SELECTION
+        // =========================================================
+        function setActiveMatch(matchId) {
+            if (!isScorer) return;
+            activeMatchId = matchId || null;
+            saveToFirebase();
+            rebuildAllMatchUI();
+        }
+
+        function populateMatchSelector() {
+            var sel = document.getElementById("activeMatchSelect");
+            if (!sel) return;
+            var prev = sel.value;
+            sel.innerHTML = "<option value=''>— Select a match to score —</option>";
+            schedule.forEach(function (s) {
+                var m = matchData[s.id];
+                var t1 = teams[s.team1Index] || {}, t2 = teams[s.team2Index] || {};
+                var num = parseInt(s.id.replace(LEAGUE_PREFIX, ""), 10) + 1;
+                var label = "Match " + num + ": " + (t1.name || "?") + " vs " + (t2.name || "?");
+                if (m && m.matchComplete) label += " ✓";
+                var opt = document.createElement("option");
+                opt.value = s.id;
+                opt.textContent = label;
+                sel.appendChild(opt);
+            });
+            // Also add final if it exists
+            if (matchData[FINAL_MATCH_ID]) {
+                var mf = matchData[FINAL_MATCH_ID];
+                var tf1 = teams[mf.team1Index] || {}, tf2 = teams[mf.team2Index] || {};
+                var opt = document.createElement("option");
+                opt.value = FINAL_MATCH_ID;
+                opt.textContent = "Final: " + (tf1.name || "?") + " vs " + (tf2.name || "?");
+                sel.appendChild(opt);
+            }
+            // Restore selection
+            if (activeMatchId) sel.value = activeMatchId;
+        }
+
+        // Build a compact summary card for a non-active match
+        function buildMatchSummaryHTML(matchId, t1Index, t2Index, isFinal) {
+            var t1 = teams[t1Index] || {name: "?"}, t2 = teams[t2Index] || {name: "?"};
+            var m = matchData[matchId] || {};
+            var num = isFinal ? "Final" : "Match " + (parseInt(matchId.replace(LEAGUE_PREFIX, ""), 10) + 1);
+            var title = num + ": " + escHtml(t1.name) + " vs " + escHtml(t2.name);
+            var sA = m.scoreA || 0, sB = m.scoreB || 0;
+            var swA = m.setsWonA || 0, swB = m.setsWonB || 0;
+            var curSet = m.currentSet || 1;
+            var statusText;
+            if (m.matchComplete) {
+                var winner = swA > swB ? escHtml(t1.name) : escHtml(t2.name);
+                statusText = winner + " won " + swA + "–" + swB + " in sets";
+            } else if (sA + sB > 0 || swA + swB > 0) {
+                statusText = "Set " + curSet + " in progress";
+            } else {
+                statusText = "Not started";
+            }
+            return (
+                "<div class='compact-match-card'>" +
+                "  <div class='compact-match-info'>" +
+                "    <div class='compact-match-title'>" + title + "</div>" +
+                "    <div class='compact-teams'>" +
+                "      <div class='compact-team-row'>" +
+                "        <span class='compact-team-name'>" + escHtml(t1.name) + "</span>" +
+                "        <span class='compact-score'>" + sA + "</span>" +
+                "      </div>" +
+                "      <div class='compact-team-row'>" +
+                "        <span class='compact-team-name'>" + escHtml(t2.name) + "</span>" +
+                "        <span class='compact-score'>" + sB + "</span>" +
+                "      </div>" +
+                "    </div>" +
+                "    <div class='compact-status'>" + statusText + "</div>" +
+                "  </div>" +
+                "  <div class='compact-sets'>Sets " + swA + "–" + swB + "</div>" +
+                "</div>"
+            );
         }
 
         function buildMatchCardHTML(matchId, t1Index, t2Index, isFinal) {
