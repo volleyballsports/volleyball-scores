@@ -550,6 +550,88 @@
             font-weight: 600;
         }
 
+        /* Sets display */
+        .sets-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 6px 12px;
+            margin-bottom: 10px;
+            font-size: 0.78rem;
+            font-family: var(--mono);
+        }
+
+        .sets-bar .sets-label {
+            color: var(--text-dim);
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+
+        .sets-score {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        .sets-score .set-num {
+            color: var(--accent);
+        }
+
+        .sets-score .set-sep {
+            color: var(--text-dim);
+        }
+
+        .set-history {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .set-chip {
+            padding: 2px 8px;
+            border-radius: 999px;
+            border: 1px solid var(--border);
+            font-size: 0.68rem;
+            font-family: var(--mono);
+            color: var(--text-dim);
+            background: var(--bg);
+        }
+
+        .set-chip.won-a {
+            border-color: var(--green);
+            color: var(--green);
+            background: rgba(34, 197, 94, 0.08);
+        }
+
+        .set-chip.won-b {
+            border-color: var(--red);
+            color: var(--red);
+            background: rgba(239, 68, 68, 0.08);
+        }
+
+        .match-complete-banner {
+            display: none;
+            text-align: center;
+            padding: 10px 16px;
+            border-radius: 8px;
+            background: rgba(234, 179, 8, 0.12);
+            border: 1px solid var(--yellow);
+            color: var(--yellow);
+            font-weight: 700;
+            font-size: 0.95rem;
+            margin-bottom: 10px;
+        }
+
+        .score-btn:disabled.blocked {
+            opacity: 0.15;
+        }
+
         /* Standings */
         #standingsTable {
             width: 100%;
@@ -1213,6 +1295,8 @@
 
                 // Ensure per-match active rosters exist (already set if coming from Firebase)
                 ensureActivePlayers(matchId);
+                // Ensure set-tracking fields exist (backwards-compat with old Firebase data)
+                ensureSetState(matchId);
 
                 renderRotation(matchId, "A");
                 renderRotation(matchId, "B");
@@ -1383,8 +1467,24 @@
                 availableSubsB: null,
                 // Which court-player index is pending sub-out (-1 = none)
                 pendingSubA: -1,
-                pendingSubB: -1
+                pendingSubB: -1,
+                // Sets tracking (best of 3, each set to 15 with 2-point lead)
+                currentSet: 1,
+                setsWonA: 0,
+                setsWonB: 0,
+                sets: [],          // completed sets: [{scoreA, scoreB}]
+                matchComplete: false
             };
+        }
+
+        // Ensure set-tracking fields exist on loaded match data (backwards-compat with Firebase data)
+        function ensureSetState(matchId) {
+            var m = matchData[matchId]; if (!m) return;
+            if (m.currentSet === undefined) m.currentSet = 1;
+            if (m.setsWonA === undefined) m.setsWonA = 0;
+            if (m.setsWonB === undefined) m.setsWonB = 0;
+            if (!m.sets) m.sets = [];
+            if (m.matchComplete === undefined) m.matchComplete = false;
         }
 
         // Ensure per-match rosters are initialized (call before using activePlayers)
@@ -1448,6 +1548,20 @@
                 "    <span class='match-title'>" + title + "</span>" +
                 "  </div>" +
 
+                // Match complete banner (hidden until match ends)
+                "  <div id='matchBanner_" + matchId + "' class='match-complete-banner'></div>" +
+
+                // Sets score bar
+                "  <div class='sets-bar'>" +
+                "    <span class='sets-label'>Sets (Best of 3)</span>" +
+                "    <div class='sets-score'>" +
+                "      <span id='setsWonA_" + matchId + "' class='set-num'>0</span>" +
+                "      <span class='set-sep'>–</span>" +
+                "      <span id='setsWonB_" + matchId + "' class='set-num'>0</span>" +
+                "    </div>" +
+                "    <div id='setHistory_" + matchId + "' class='set-history'></div>" +
+                "  </div>" +
+
                 // Team A row
                 "  <div class='team-row'>" +
                 "    <div class='team-left'>" +
@@ -1472,6 +1586,11 @@
                 "      <span id='score_" + matchId + "_B' class='score-value'>0</span>" +
                 "      <button class='score-btn scorer-only'" + disabledAttr + " onclick=\"changeScore('" + matchId + "','B',1)\">+</button>" +
                 "    </div>" +
+                "  </div>" +
+
+                // Current set indicator
+                "  <div style='text-align:center;margin:4px 0 8px;font-size:0.72rem;color:var(--text-dim);font-family:var(--mono);'>" +
+                "    <span id='setIndicator_" + matchId + "'>Set 1 · First to 15 (2-point lead)</span>" +
                 "  </div>" +
 
                 // Rotations
@@ -1616,6 +1735,12 @@
             if (delta === 0) return;
 
             if (delta > 0) {
+                // Block scoring after match is complete
+                if (m.matchComplete) {
+                    alert("Match is complete. No more points can be scored.");
+                    return;
+                }
+
                 if (!m.rallyHistory) m.rallyHistory = [];
                 m.rallyHistory.push({
                     scoringTeam: teamKey,
@@ -1626,7 +1751,13 @@
                     prevServerTeam: m.serverTeam,
                     prevServerPlayerA: m.serverPlayerA,
                     prevServerPlayerB: m.serverPlayerB,
-                    prevRallyCounter: m.rallyCounter
+                    prevRallyCounter: m.rallyCounter,
+                    // Set state snapshot for undo
+                    prevCurrentSet: m.currentSet || 1,
+                    prevSetsWonA: m.setsWonA || 0,
+                    prevSetsWonB: m.setsWonB || 0,
+                    prevSets: (m.sets || []).slice(),
+                    prevMatchComplete: m.matchComplete || false
                 });
                 if (teamKey === "A") m.scoreA += delta; else m.scoreB += delta;
                 m.rallyCounter += 1;
@@ -1634,6 +1765,8 @@
                 if (autoRotate && m.serverTeam && m.serverTeam !== teamKey) {
                     manualRotateInternal(matchId, teamKey);
                 }
+                // Check if this point completes a set
+                checkSetComplete(matchId);
             } else {
                 undoLastPoint(matchId, teamKey);
                 return;
@@ -1645,6 +1778,34 @@
             updateStandings();
             renderServiceLogTable(matchId);
             saveToFirebase();
+        }
+
+        // Check if the current set is complete and advance if so.
+        // A set ends when one team reaches 15+ points with a 2+ point lead.
+        function checkSetComplete(matchId) {
+            var m = matchData[matchId]; if (!m) return;
+            var a = m.scoreA, b = m.scoreB;
+            var diff = Math.abs(a - b);
+            if (!((a >= 15 || b >= 15) && diff >= 2)) return; // not complete yet
+
+            var winner = (a > b) ? "A" : "B";
+            m.sets = m.sets || [];
+            m.sets.push({ scoreA: a, scoreB: b });
+            if (winner === "A") m.setsWonA = (m.setsWonA || 0) + 1;
+            else m.setsWonB = (m.setsWonB || 0) + 1;
+
+            // Match ends when one team wins 2 sets
+            if (m.setsWonA >= 2 || m.setsWonB >= 2) {
+                m.matchComplete = true;
+                return;
+            }
+
+            // Start next set
+            m.currentSet = (m.currentSet || 1) + 1;
+            m.scoreA = 0;
+            m.scoreB = 0;
+            // Keep rally counter running; clear per-set history (undo still works via the snapshot)
+            m.rallyHistory = [];
         }
 
         // Internal rotate that doesn't trigger a separate save
@@ -1685,6 +1846,12 @@
             m.serverPlayerB = last.prevServerPlayerB;
             m.rallyCounter = last.prevRallyCounter;
             if (m.serviceLog && m.serviceLog.length) m.serviceLog.pop();
+            // Restore set state (if the snapshot included it)
+            if (last.prevCurrentSet !== undefined) m.currentSet = last.prevCurrentSet;
+            if (last.prevSetsWonA !== undefined) m.setsWonA = last.prevSetsWonA;
+            if (last.prevSetsWonB !== undefined) m.setsWonB = last.prevSetsWonB;
+            if (last.prevSets !== undefined) m.sets = last.prevSets;
+            if (last.prevMatchComplete !== undefined) m.matchComplete = last.prevMatchComplete;
 
             refreshScoreUI(matchId);
             renderRotation(matchId, "A");
@@ -1887,6 +2054,53 @@
             var b = document.getElementById("score_" + matchId + "_B");
             if (a) a.textContent = m.scoreA;
             if (b) b.textContent = m.scoreB;
+
+            // Update sets won display
+            var swA = document.getElementById("setsWonA_" + matchId);
+            var swB = document.getElementById("setsWonB_" + matchId);
+            if (swA) swA.textContent = m.setsWonA || 0;
+            if (swB) swB.textContent = m.setsWonB || 0;
+
+            // Render set history chips
+            var histEl = document.getElementById("setHistory_" + matchId);
+            if (histEl) {
+                var sets = m.sets || [];
+                histEl.innerHTML = sets.map(function (s, i) {
+                    var aWon = s.scoreA > s.scoreB;
+                    return "<span class='set-chip " + (aWon ? "won-a" : "won-b") + "'>S" + (i + 1) + ": " + s.scoreA + "–" + s.scoreB + "</span>";
+                }).join("");
+            }
+
+            // Update current set indicator
+            var indEl = document.getElementById("setIndicator_" + matchId);
+            if (indEl) {
+                if (m.matchComplete) {
+                    var winner = (m.setsWonA || 0) > (m.setsWonB || 0)
+                        ? teams[m.team1Index].name
+                        : teams[m.team2Index].name;
+                    indEl.textContent = "Match complete";
+                } else {
+                    var curSet = m.currentSet || 1;
+                    var aScore = m.scoreA || 0;
+                    var bScore = m.scoreB || 0;
+                    var deuce = (aScore >= 14 && bScore >= 14);
+                    indEl.textContent = "Set " + curSet + (deuce ? " · Deuce – play to 2-point lead" : " · First to 15 (2-point lead)");
+                }
+            }
+
+            // Show/hide match complete banner
+            var bannerEl = document.getElementById("matchBanner_" + matchId);
+            if (bannerEl) {
+                if (m.matchComplete) {
+                    var winnerName = (m.setsWonA || 0) > (m.setsWonB || 0)
+                        ? teams[m.team1Index].name
+                        : teams[m.team2Index].name;
+                    bannerEl.textContent = "🏆 Match complete — " + winnerName + " wins " + (m.setsWonA || 0) + "–" + (m.setsWonB || 0) + " in sets!";
+                    bannerEl.style.display = "block";
+                } else {
+                    bannerEl.style.display = "none";
+                }
+            }
         }
 
         function safeId(str) { return String(str).replace(/[^a-zA-Z0-9_-]/g, "_"); }
@@ -1938,19 +2152,27 @@
         // =========================================================
         function getStandingsData() {
             var n = teams.length;
-            var wins = new Array(n).fill(0);
-            var pf = new Array(n).fill(0);
-            var pa = new Array(n).fill(0);
+            var wins = new Array(n).fill(0);    // match wins
+            var sw = new Array(n).fill(0);       // sets won
+            var sl = new Array(n).fill(0);       // sets lost
             schedule.forEach(function (s) {
                 var m = matchData[s.id]; if (!m) return;
-                pf[s.team1Index] += m.scoreA; pa[s.team1Index] += m.scoreB;
-                pf[s.team2Index] += m.scoreB; pa[s.team2Index] += m.scoreA;
-                if (m.scoreA > m.scoreB) wins[s.team1Index]++;
-                else if (m.scoreB > m.scoreA) wins[s.team2Index]++;
+                var setsA = m.setsWonA || 0;
+                var setsB = m.setsWonB || 0;
+                sw[s.team1Index] += setsA; sl[s.team1Index] += setsB;
+                sw[s.team2Index] += setsB; sl[s.team2Index] += setsA;
+                // Count match wins only for completed matches
+                if (m.matchComplete) {
+                    if (setsA > setsB) wins[s.team1Index]++;
+                    else wins[s.team2Index]++;
+                }
             });
             var data = [];
-            for (var i = 0; i < n; i++) data.push({ idx: i, name: teams[i].name, wins: wins[i], pf: pf[i], pa: pa[i] });
-            data.sort(function (a, b) { return b.wins !== a.wins ? b.wins - a.wins : (b.pf - b.pa) - (a.pf - a.pa); });
+            for (var i = 0; i < n; i++) data.push({ idx: i, name: teams[i].name, wins: wins[i], sw: sw[i], sl: sl[i] });
+            data.sort(function (a, b) {
+                if (b.wins !== a.wins) return b.wins - a.wins;
+                return (b.sw - b.sl) - (a.sw - a.sl);
+            });
             return data;
         }
 
@@ -1958,15 +2180,15 @@
             var table = document.getElementById("standingsTable");
             if (!table) return;
             var data = getStandingsData();
-            var html = "<tr><th>#</th><th>Team</th><th>W</th><th>PF</th><th>PA</th><th>Diff</th></tr>";
+            var html = "<tr><th>#</th><th>Team</th><th>MW</th><th>SW</th><th>SL</th><th>Diff</th></tr>";
             data.forEach(function (row, idx) {
-                var diff = row.pf - row.pa;
+                var diff = row.sw - row.sl;
                 html += "<tr>" +
                     "<td>" + (idx + 1) + "</td>" +
                     "<td>" + escHtml(row.name) + "</td>" +
                     "<td style='font-weight:700;'>" + row.wins + "</td>" +
-                    "<td>" + row.pf + "</td>" +
-                    "<td>" + row.pa + "</td>" +
+                    "<td>" + row.sw + "</td>" +
+                    "<td>" + row.sl + "</td>" +
                     "<td style='color:" + (diff >= 0 ? "var(--green)" : "var(--red)") + ";font-weight:600;'>" + (diff >= 0 ? "+" : "") + diff + "</td>" +
                     "</tr>";
             });
