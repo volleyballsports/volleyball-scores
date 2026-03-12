@@ -24,6 +24,18 @@ function renderRotation(matchId, teamKey) {
     var pos4 = rot[3], pos3 = rot[2], pos2 = rot[1];
     var pos5 = rot[4], pos1 = rot[0], pos6 = rot[5];
 
+    // Find which court position holds the selected server player
+    var serverPlayer = (teamKey === "A") ? m.serverPlayerA : m.serverPlayerB;
+    var serverCourtPos = null;
+    if (serverPlayer) {
+        for (var si = 0; si < 6; si++) {
+            if (players[rot[si] - 1] === serverPlayer) {
+                serverCourtPos = si + 1;
+                break;
+            }
+        }
+    }
+
     function posCell(courtPos, label, isServerSlot) {
         var isSelected = tapSwapState
             && tapSwapState.matchId === matchId
@@ -50,14 +62,14 @@ function renderRotation(matchId, teamKey) {
 
     container.innerHTML =
         "<div class='rot-row'>" +
-        "  " + posCell(4, slotLabel(pos4), false) +
-        "  " + posCell(3, slotLabel(pos3), false) +
-        "  " + posCell(2, slotLabel(pos2), false) +
+        "  " + posCell(4, slotLabel(pos4), serverCourtPos === 4) +
+        "  " + posCell(3, slotLabel(pos3), serverCourtPos === 3) +
+        "  " + posCell(2, slotLabel(pos2), serverCourtPos === 2) +
         "</div>" +
         "<div class='rot-row'>" +
-        "  " + posCell(5, slotLabel(pos5), false) +
-        "  " + posCell(1, slotLabel(pos1), true) +
-        "  " + posCell(6, slotLabel(pos6), false) +
+        "  " + posCell(5, slotLabel(pos5), serverCourtPos === 5) +
+        "  " + posCell(1, slotLabel(pos1), serverCourtPos === 1) +
+        "  " + posCell(6, slotLabel(pos6), serverCourtPos === 6) +
         "</div>";
 
     // Attach touch listeners after rendering.
