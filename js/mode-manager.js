@@ -46,3 +46,22 @@ function showModeBanner(mode, text) {
     el.textContent = text;
     el.style.display = "block";
 }
+
+
+function setDisplayTheme(theme) {
+    var nextTheme = (theme === "day") ? "day" : "night";
+    document.body.classList.toggle("theme-day", nextTheme === "day");
+    try {
+        localStorage.setItem("scoreboardTheme", nextTheme);
+    } catch (e) { }
+    var selector = document.getElementById("themeSelector");
+    if (selector && selector.value !== nextTheme) selector.value = nextTheme;
+}
+
+function initializeTheme() {
+    var saved = "night";
+    try {
+        saved = localStorage.getItem("scoreboardTheme") || "night";
+    } catch (e) { }
+    setDisplayTheme(saved);
+}

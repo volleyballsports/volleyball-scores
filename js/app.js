@@ -8,6 +8,7 @@ document.getElementById("passwordInput").addEventListener("keyup", function (e) 
 });
 
 window.addEventListener("DOMContentLoaded", function () {
+    initializeTheme();
     renderTeamSetup();
     showModeBanner("viewer", "👁 Viewer Mode — Live scores update automatically");
     loadFromFirebase();

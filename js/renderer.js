@@ -12,16 +12,31 @@ function buildMatchSummaryHTML(matchId, t1Index, t2Index, isFinal) {
     var swA = m.setsWonA || 0, swB = m.setsWonB || 0;
     var curSet = m.currentSet || 1;
     var statusText;
+    var summaryClass = "in-progress";
     if (m.matchComplete) {
         var winner = swA > swB ? escHtml(t1.name) : escHtml(t2.name);
         statusText = winner + " won " + swA + "–" + swB + " in sets";
+        summaryClass = "complete";
     } else if (sA + sB > 0 || swA + swB > 0) {
         statusText = "Set " + curSet + " in progress";
     } else {
         statusText = "Not started";
+        summaryClass = "not-started";
     }
+
+    var playedSets = (m.sets || []).slice();
+    if (!m.matchComplete && (sA + sB > 0)) {
+        playedSets.push({ scoreA: sA, scoreB: sB, inProgress: true });
+    }
+    var allSetScores = playedSets.length
+        ? playedSets.map(function (set, i) {
+            var setLabel = "S" + (i + 1) + ": " + set.scoreA + "–" + set.scoreB;
+            return "<span class='compact-set-chip" + (set.inProgress ? " active" : "") + "'>" + setLabel + "</span>";
+        }).join("")
+        : "<span class='compact-set-chip empty'>No set scores yet</span>";
+
     return (
-        "<div class='compact-match-card'>" +
+        "<div class='compact-match-card " + summaryClass + "'>" +
         "  <div class='compact-match-info'>" +
         "    <div class='compact-match-title'>" + title + "</div>" +
         "    <div class='compact-teams'>" +
@@ -34,6 +49,7 @@ function buildMatchSummaryHTML(matchId, t1Index, t2Index, isFinal) {
         "        <span class='compact-score'>" + sB + "</span>" +
         "      </div>" +
         "    </div>" +
+        "    <div class='compact-set-history'>" + allSetScores + "</div>" +
         "    <div class='compact-status'>" + statusText + "</div>" +
         "  </div>" +
         "  <div class='compact-sets'>Sets " + swA + "–" + swB + "</div>" +

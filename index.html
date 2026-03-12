@@ -44,6 +44,12 @@
         Scorer Mode
     </button>
 
+    <!-- THEME SELECTOR -->
+    <select id="themeSelector" class="theme-selector" aria-label="Display theme" onchange="setDisplayTheme(this.value)">
+        <option value="night">🌙 Indoor / Night</option>
+        <option value="day">☀️ Outdoor / Daylight</option>
+    </select>
+
     <!-- EDIT TEAMS BUTTON (scorer only) -->
     <button class="edit-teams-btn" onclick="showEditTeamsModal()">✏️ Edit Teams</button>
 
