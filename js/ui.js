@@ -63,13 +63,19 @@ function renderServiceLogTable(matchId) {
         container.innerHTML = "<div style='color:var(--text-dim);font-size:0.72rem;padding:4px;'>No serves recorded yet.</div>";
         return;
     }
+    function teamLabel(teamKey) {
+        if (!teamKey) return "";
+        var name = teamKey === "A" ? teams[m.team1Index].name : teams[m.team2Index].name;
+        return name.length > 6 ? name.slice(0, 3) : name;
+    }
+
     var html = "<table><thead><tr><th>Rally</th><th>Time</th><th>Server</th><th>Scorer</th><th>Score</th></tr></thead><tbody>";
     log.forEach(function (e) {
         html += "<tr>" +
             "<td>" + (e.rally || "") + "</td>" +
             "<td>" + (e.time || "") + "</td>" +
-            "<td>" + (e.serverTeam || "") + (e.serverPlayer ? " (" + e.serverPlayer + ")" : "") + "</td>" +
-            "<td>" + (e.scoringTeam || "") + "</td>" +
+            "<td>" + teamLabel(e.serverTeam) + (e.serverPlayer ? " (" + e.serverPlayer + ")" : "") + "</td>" +
+            "<td>" + teamLabel(e.scoringTeam) + "</td>" +
             "<td>" + (e.scoreA != null ? e.scoreA : "") + " – " + (e.scoreB != null ? e.scoreB : "") + "</td>" +
             "</tr>";
     });
