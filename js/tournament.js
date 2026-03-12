@@ -34,6 +34,7 @@ function initializeTournament() {
     activeMatchId = null;
     clearFinalUI();
     buildLeagueMatches();
+    if (isScorer) populateMatchSelector();
 
     var standCard = document.getElementById("standingsCard");
     if (standCard) standCard.style.display = "block";
