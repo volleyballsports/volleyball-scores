@@ -161,7 +161,7 @@ function rebuildAllMatchUI() {
                 if (logDiv) {
                     var entry = document.createElement("div");
                     entry.textContent = sub.playerOut
-                        ? "• " + sub.playerOut + " ⇄ " + sub.playerIn + "  (" + sub.time + ")"
+                        ? "• " + sub.playerOut + " ⇄ " + sub.playerIn + "  (Set " + (sub.set || 1) + "  " + (sub.scoreA || 0) + "–" + (sub.scoreB || 0) + "  " + sub.time + ")"
                         : "• " + sub.player + " at " + sub.time;
                     logDiv.appendChild(entry);
                 }

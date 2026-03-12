@@ -48,11 +48,11 @@ function substitutePlayer(matchId, teamKey, subName) {
     var time = new Date().toLocaleTimeString();
     var arr = (teamKey === "A") ? m.subsA : m.subsB;
     if (!arr) { arr = []; if (teamKey === "A") m.subsA = arr; else m.subsB = arr; }
-    arr.push({ time: time, playerIn: subName, playerOut: playerOut });
+    arr.push({ time: time, playerIn: subName, playerOut: playerOut, scoreA: m.scoreA, scoreB: m.scoreB, set: m.currentSet || 1 });
     var logDiv = document.getElementById("subLog_" + matchId + "_" + teamKey);
     if (logDiv) {
         var entry = document.createElement("div");
-        entry.textContent = "• " + playerOut + " ⇄ " + subName + "  (" + time + ")";
+        entry.textContent = "• " + playerOut + " ⇄ " + subName + "  (Set " + (m.currentSet || 1) + "  " + m.scoreA + "–" + m.scoreB + "  " + time + ")";
         logDiv.appendChild(entry);
     }
 
