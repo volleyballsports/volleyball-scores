@@ -6,17 +6,15 @@ var touchDragOverElement = null;
 var tapSwapState = null; // { matchId, teamKey, courtPos } — first cell of a tap-to-swap
 var courtSwapped = {}; // matchId -> bool: whether Team B is displayed on top
 
-function swapCourtView(matchId) {
-    courtSwapped[matchId] = !courtSwapped[matchId];
-    var swapped = courtSwapped[matchId];
-
+// Apply a specific swap state to the DOM without toggling the flag.
+// Called both by swapCourtView (user action) and after any card rebuild.
+function applyCourtSwap(matchId, swapped) {
     var halfA = document.getElementById('courtHalfA_' + matchId);
     var halfB = document.getElementById('courtHalfB_' + matchId);
     var netEl = document.getElementById('courtNet_' + matchId);
     if (!halfA || !halfB || !netEl) return;
     var courtView = netEl.parentElement; // .court-main
 
-    // Remove both halves, then re-insert in the desired order around the net
     courtView.removeChild(halfA);
     courtView.removeChild(halfB);
 
@@ -34,9 +32,18 @@ function swapCourtView(matchId) {
         halfB.classList.remove('court-left');  halfB.classList.add('court-right');
     }
 
-    // Re-render rotation grids so column mirroring reflects the new side
     renderRotation(matchId, 'A');
     renderRotation(matchId, 'B');
+}
+
+function swapCourtView(matchId) {
+    courtSwapped[matchId] = !courtSwapped[matchId];
+    applyCourtSwap(matchId, courtSwapped[matchId]);
+}
+
+// Restore the court swap state after a card rebuild (e.g. triggered by Firebase sync).
+function restoreCourtSwap(matchId) {
+    if (courtSwapped[matchId]) applyCourtSwap(matchId, true);
 }
 
 function renderRotation(matchId, teamKey) {

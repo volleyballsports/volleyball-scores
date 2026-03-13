@@ -25,7 +25,7 @@ function saveToFirebase() {
         timestamp: firebase.database.ServerValue.TIMESTAMP
     };
     dbRef.set(state).then(function () {
-        setTimeout(function () { localUpdate = false; }, 500);
+        setTimeout(function () { localUpdate = false; }, 2000);
     }).catch(function (err) {
         console.error("Firebase write error:", err);
         localUpdate = false;
