@@ -147,6 +147,7 @@ function rebuildAllMatchUI() {
 
         renderRotation(matchId, "A");
         renderRotation(matchId, "B");
+        restoreCourtSwap(matchId);
         refreshScoreUI(matchId);
         renderServerButtons(matchId);
         renderServiceLogTable(matchId);
