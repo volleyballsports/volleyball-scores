@@ -277,15 +277,15 @@ body::before {
     font-family: var(--font);
     text-align: center;
     color: var(--text-dim);
-    white-space: normal;
-    overflow-wrap: break-word;
-    word-break: normal;
-    hyphens: auto;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
     line-height: 1.2;
 }
 
 
 .rot-pos.draggable { cursor: grab; }
+.rot-pos.server-selectable { cursor: pointer; }
 .rot-pos.drag-over { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-glow); }
 .rot-pos.server-slot { border-color: var(--yellow); background: var(--yellow-soft); color: var(--yellow); font-weight: 700; }
 .rot-pos.tap-selected { border-color: var(--accent); background: var(--accent-glow); color: var(--accent); font-weight: 700; box-shadow: 0 0 0 2px var(--accent-glow); }
@@ -459,14 +459,12 @@ body::before {
     text-align: right;
 }
 
-/* Left half: score buttons on inner-right (near net) */
+/* Left half: grid layout */
 .court-left .court-half-grid  { order: 2; }
-.court-left .court-net-score  { order: 3; }
 
-/* Right half: score buttons on inner-left (near net), team label on outer-right */
+/* Right half: grid layout, team label on outer-right */
 .court-right .court-team-label { text-align: right; }
 .court-right .court-half-grid { order: 2; }
-.court-right .court-net-score { order: 1; }
 
 /* Rotation grid wrapper inside each half */
 .court-half-grid {
@@ -494,26 +492,39 @@ body::before {
     margin-top: 6px;
 }
 
-/* Score column at the net edge of each half (stacked: + / score / −) */
-.court-net-score {
+/* Score controls below court */
+.court-score-strip {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border-top: 1px solid var(--border);
+    background: var(--surface2);
+}
+
+.court-score-team {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 4px;
-    padding: 8px 6px;
-    background: var(--bg);
-    flex-shrink: 0;
-    min-width: 48px;
+    gap: 6px;
+    padding: 8px;
 }
 
-.net-score-num {
+.court-score-team + .court-score-team {
+    border-left: 1px solid var(--border);
+}
+
+.court-score-value {
     font-family: var(--mono);
     font-size: 1.65rem;
     font-weight: 700;
     color: var(--text);
     min-width: 40px;
     text-align: center;
+}
+
+.court-score-controls {
+    display: flex;
+    gap: 8px;
 }
 
 /* Vertical net column in the center */

@@ -82,15 +82,25 @@ function renderRotation(matchId, teamKey) {
     }
 
     function posCell(courtPos, label, isServerSlot) {
+        var canRearrange = isScorer && positionRotationEnabled;
+        var canPickServerFromCourt = isScorer && !positionRotationEnabled;
+        var courtPlayer = slotLabel(courtPos === 1 ? pos1 : courtPos === 2 ? pos2 : courtPos === 3 ? pos3 : courtPos === 4 ? pos4 : courtPos === 5 ? pos5 : pos6);
         var isSelected = tapSwapState
             && tapSwapState.matchId === matchId
             && tapSwapState.teamKey === teamKey
             && tapSwapState.courtPos === courtPos;
         var classes = "rot-pos"
             + (isServerSlot ? " server-slot" : "")
-            + (isScorer ? " draggable" : "")
+            + (canRearrange ? " draggable" : "")
+            + (canPickServerFromCourt ? " server-selectable" : "")
             + (isSelected ? " tap-selected" : "");
         if (!isScorer) return "<div class='" + classes + "'>" + label + "</div>";
+        if (!canRearrange && canPickServerFromCourt) {
+            return "<div class='" + classes + "'" +
+                " onclick=\"setServer('" + matchId + "','" + teamKey + "','" + escJs(courtPlayer) + "')\">" +
+                label + "</div>";
+        }
+        if (!canRearrange) return "<div class='" + classes + "'>" + label + "</div>";
         // data attributes used by touch handlers; onclick handles tap-to-swap on both mobile and desktop
         return "<div class='" + classes + "'" +
             " data-match-id='" + matchId + "'" +
@@ -130,7 +140,7 @@ function renderRotation(matchId, teamKey) {
 
     // Attach touch listeners after rendering.
     // passive:false on touchmove/touchend so preventDefault() can block scroll and suppress click.
-    if (isScorer) {
+    if (isScorer && positionRotationEnabled) {
         var cells = container.querySelectorAll('.rot-pos');
         for (var i = 0; i < cells.length; i++) {
             cells[i].addEventListener('touchstart', onRotationTouchStart, { passive: true });
@@ -143,7 +153,7 @@ function renderRotation(matchId, teamKey) {
 // ---- Tap-to-swap (click — works on both desktop and mobile taps) ----
 
 function onRotationCellClick(matchId, teamKey, courtPos) {
-    if (!isScorer) return;
+    if (!isScorer || !positionRotationEnabled) return;
 
     if (!tapSwapState) {
         // First tap: select this cell
@@ -181,7 +191,7 @@ function onRotationCellClick(matchId, teamKey, courtPos) {
 // ---- Mouse drag-and-drop (desktop) ----
 
 function onRotationDragStart(event, matchId, teamKey, courtPos) {
-    if (!isScorer) return;
+    if (!isScorer || !positionRotationEnabled) return;
     rotationDragState = { matchId: matchId, teamKey: teamKey, courtPos: courtPos };
     if (event.dataTransfer) event.dataTransfer.effectAllowed = "move";
 }
@@ -198,7 +208,7 @@ function onRotationDragLeave(event) {
 function onRotationDrop(event, matchId, teamKey, targetPos) {
     event.preventDefault();
     event.currentTarget.classList.remove("drag-over");
-    if (!isScorer || !rotationDragState) return;
+    if (!isScorer || !positionRotationEnabled || !rotationDragState) return;
     if (rotationDragState.matchId !== matchId || rotationDragState.teamKey !== teamKey) return;
     var fromPos = rotationDragState.courtPos;
     rotationDragState = null;
@@ -216,7 +226,7 @@ function onRotationDrop(event, matchId, teamKey, targetPos) {
 // ---- Touch drag-and-drop (mobile) ----
 
 function onRotationTouchStart(event) {
-    if (!isScorer) return;
+    if (!isScorer || !positionRotationEnabled) return;
     var el = event.currentTarget;
     rotationDragState = {
         matchId: el.getAttribute('data-match-id'),
@@ -226,7 +236,7 @@ function onRotationTouchStart(event) {
 }
 
 function onRotationTouchMove(event) {
-    if (!rotationDragState) return;
+    if (!positionRotationEnabled || !rotationDragState) return;
     event.preventDefault(); // block page scroll while dragging
     var touch = event.touches[0];
     var el = document.elementFromPoint(touch.clientX, touch.clientY);
@@ -244,7 +254,7 @@ function onRotationTouchMove(event) {
 }
 
 function onRotationTouchEnd(event) {
-    if (!isScorer || !rotationDragState) return;
+    if (!isScorer || !positionRotationEnabled || !rotationDragState) return;
 
     if (touchDragOverElement) {
         touchDragOverElement.classList.remove('drag-over');
@@ -287,7 +297,7 @@ function onRotationTouchEnd(event) {
 // ---- Manual rotation buttons ----
 
 function manualRotate(matchId, teamKey) {
-    if (!isScorer) return;
+    if (!isScorer || !positionRotationEnabled) return;
     var m = matchData[matchId]; if (!m) return;
     rotateTeamPositionsInternal(matchId, teamKey);
 

@@ -60,6 +60,7 @@ function applyServerBreakCooldown(matchId, teamKey, serverName) {
 }
 
 function getServerPositionWarning(matchId, teamKey, playerName) {
+    if (!positionRotationEnabled) return "";
     var m = matchData[matchId]; if (!m) return "";
     var players = teamKey === "A" ? (m.activePlayersA || teams[m.team1Index].players || []) : (m.activePlayersB || teams[m.team2Index].players || []);
     var rot = teamKey === "A" ? (m.rotationA || []) : (m.rotationB || []);
@@ -90,6 +91,13 @@ function renderServerButtons(matchId) {
 
     var containerA = document.getElementById("srvContainer_" + matchId + "_A");
     var containerB = document.getElementById("srvContainer_" + matchId + "_B");
+
+    if (!positionRotationEnabled) {
+        if (containerA) containerA.innerHTML = "";
+        if (containerB) containerB.innerHTML = "";
+        renderServerReminder(matchId);
+        return;
+    }
 
     if (containerA) {
         containerA.innerHTML = playersA.map(function (p) {

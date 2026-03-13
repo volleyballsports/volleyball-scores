@@ -67,6 +67,9 @@ function buildMatchCardHTML(matchId, t1Index, t2Index, isFinal) {
 
     var disabledAttr = isScorer ? "" : " disabled";
 
+    var showManualRotate = positionRotationEnabled;
+    var showServerList = positionRotationEnabled;
+
     return (
         "<div class='card' id='card_" + matchId + "'>" +
         "  <div class='match-header'>" +
@@ -101,14 +104,8 @@ function buildMatchCardHTML(matchId, t1Index, t2Index, isFinal) {
         "          <div class='court-half-grid'>" +
         "            <div id='rotCourt_" + matchId + "_A' class='rotation-court'></div>" +
         "            <div class='court-half-btns scorer-only'>" +
-        "              <button class='btn-rotate' onclick=\"manualRotate('" + matchId + "','A')\">↻ Rotate</button>" +
-        "              <button class='btn-rotate' onclick=\"undoLastPoint('" + matchId + "','A')\">↺ Undo " + escHtml(t1.name) + "</button>" +
+        (showManualRotate ? "              <button class='btn-rotate' onclick=\"manualRotate('" + matchId + "','A')\">↻ Rotate</button>" : "") +
         "            </div>" +
-        "          </div>" +
-        "          <div class='court-net-score'>" +
-        "            <button class='score-btn scorer-only'" + disabledAttr + " onclick=\"changeScore('" + matchId + "','A',1)\">+</button>" +
-        "            <span id='score_" + matchId + "_A' class='net-score-num'>0</span>" +
-        "            <button class='score-btn minus scorer-only'" + disabledAttr + " onclick=\"changeScore('" + matchId + "','A',-1)\">−</button>" +
         "          </div>" +
         "        </div>" +
         "      </div>" +
@@ -122,22 +119,33 @@ function buildMatchCardHTML(matchId, t1Index, t2Index, isFinal) {
         // RIGHT: Team B
         "      <div class='court-half court-right' id='courtHalfB_" + matchId + "'>" +
         "        <div class='court-half-inner'>" +
-        "          <div class='court-net-score'>" +
-        "            <button class='score-btn scorer-only'" + disabledAttr + " onclick=\"changeScore('" + matchId + "','B',1)\">+</button>" +
-        "            <span id='score_" + matchId + "_B' class='net-score-num'>0</span>" +
-        "            <button class='score-btn minus scorer-only'" + disabledAttr + " onclick=\"changeScore('" + matchId + "','B',-1)\">−</button>" +
-        "          </div>" +
         "          <div class='court-half-grid'>" +
         "            <div id='rotCourt_" + matchId + "_B' class='rotation-court'></div>" +
         "            <div class='court-half-btns scorer-only'>" +
-        "              <button class='btn-rotate' onclick=\"manualRotate('" + matchId + "','B')\">↻ Rotate</button>" +
-        "              <button class='btn-rotate' onclick=\"undoLastPoint('" + matchId + "','B')\">↺ Undo " + escHtml(t2.name) + "</button>" +
+        (showManualRotate ? "              <button class='btn-rotate' onclick=\"manualRotate('" + matchId + "','B')\">↻ Rotate</button>" : "") +
         "            </div>" +
         "          </div>" +
         "        </div>" +
         "      </div>" +
 
         "    </div>" + // close court-main
+
+        "    <div class='court-score-strip'>" +
+        "      <div class='court-score-team'>" +
+        "        <div class='court-score-value' id='score_" + matchId + "_A'>0</div>" +
+        "        <div class='court-score-controls scorer-only'>" +
+        "          <button class='score-btn'" + disabledAttr + " onclick=\"changeScore('" + matchId + "','A',1)\">+</button>" +
+        "          <button class='score-btn minus'" + disabledAttr + " onclick=\"changeScore('" + matchId + "','A',-1)\">−</button>" +
+        "        </div>" +
+        "      </div>" +
+        "      <div class='court-score-team'>" +
+        "        <div class='court-score-value' id='score_" + matchId + "_B'>0</div>" +
+        "        <div class='court-score-controls scorer-only'>" +
+        "          <button class='score-btn'" + disabledAttr + " onclick=\"changeScore('" + matchId + "','B',1)\">+</button>" +
+        "          <button class='score-btn minus'" + disabledAttr + " onclick=\"changeScore('" + matchId + "','B',-1)\">−</button>" +
+        "        </div>" +
+        "      </div>" +
+        "    </div>" +
 
         // Swap button (scorer only)
         "    <div class='court-footer scorer-only'>" +
@@ -147,12 +155,12 @@ function buildMatchCardHTML(matchId, t1Index, t2Index, isFinal) {
         "  </div>" +
 
         // Server selection (scorer only)
-        "  <div class='scorer-only mt-16'>" +
+        (showServerList ? "  <div class='scorer-only mt-16'>" +
         "    <div class='section-title'>Choose Server</div>" +
         "    <div id='serverReminder_" + matchId + "' class='server-rotation-reminder'></div>" +
         "    <div class='mt-6'><strong style='font-size:0.8rem;'>" + escHtml(t1.name) + ":</strong><br/><span id='srvContainer_" + matchId + "_A'></span><div id='serverWarning_" + matchId + "_A' class='server-position-warning'></div></div>" +
         "    <div class='mt-6'><strong style='font-size:0.8rem;'>" + escHtml(t2.name) + ":</strong><br/><span id='srvContainer_" + matchId + "_B'></span><div id='serverWarning_" + matchId + "_B' class='server-position-warning'></div></div>" +
-        "  </div>" +
+        "  </div>" : "") +
 
         // Substitutions
         "  <div class='mt-16 scorer-only'>" +

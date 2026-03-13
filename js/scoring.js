@@ -16,7 +16,9 @@ function changeScore(matchId, teamKey, delta) {
 
         // Block scoring until a server is selected
         if (!m.serverTeam) {
-            alert("Please select a server first using the 'Choose Server' section below.");
+            alert(positionRotationEnabled
+                ? "Please select a server first using the 'Choose Server' section below."
+                : "Please select a server first from the court visualization.");
             return;
         }
         var activeServerPlayer = m.serverTeam === "A" ? m.serverPlayerA : m.serverPlayerB;
