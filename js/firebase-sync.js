@@ -31,7 +31,8 @@ function saveToFirebase() {
         teams: teams,
         schedule: schedule,
         matchData: matchData,
-        autoRotate: autoRotate,
+        positionRotationEnabled: positionRotationEnabled,
+        serverRotationEnabled: serverRotationEnabled,
         activeMatchId: activeMatchId,
         timestamp: firebase.database.ServerValue.TIMESTAMP
     };
@@ -109,7 +110,9 @@ function applyState(data) {
     if (data.teams) teams = data.teams;
     if (data.schedule) schedule = data.schedule;
     if (data.matchData) matchData = data.matchData;
-    if (data.autoRotate !== undefined) autoRotate = data.autoRotate;
+    if (data.positionRotationEnabled !== undefined) positionRotationEnabled = data.positionRotationEnabled;
+    else if (data.autoRotate !== undefined) positionRotationEnabled = data.autoRotate;
+    if (data.serverRotationEnabled !== undefined) serverRotationEnabled = data.serverRotationEnabled;
     if (data.activeMatchId !== undefined) activeMatchId = data.activeMatchId;
 
     renderTeamSetup();

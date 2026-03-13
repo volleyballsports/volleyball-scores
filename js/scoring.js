@@ -19,6 +19,11 @@ function changeScore(matchId, teamKey, delta) {
             alert("Please select a server first using the 'Choose Server' section below.");
             return;
         }
+        var activeServerPlayer = m.serverTeam === "A" ? m.serverPlayerA : m.serverPlayerB;
+        if (!activeServerPlayer) {
+            alert("Please select the current server before adding the next point.");
+            return;
+        }
 
         if (!m.rallyHistory) m.rallyHistory = [];
         m.rallyHistory.push({
@@ -30,6 +35,9 @@ function changeScore(matchId, teamKey, delta) {
             prevServerTeam: m.serverTeam,
             prevServerPlayerA: m.serverPlayerA,
             prevServerPlayerB: m.serverPlayerB,
+            prevServerReminder: m.serverReminder || "",
+            prevServerCooldownA: JSON.parse(JSON.stringify(m.serverCooldownA || {})),
+            prevServerCooldownB: JSON.parse(JSON.stringify(m.serverCooldownB || {})),
             prevRallyCounter: m.rallyCounter,
             prevCurrentSet: m.currentSet || 1,
             prevSetsWonA: m.setsWonA || 0,
@@ -40,8 +48,34 @@ function changeScore(matchId, teamKey, delta) {
         if (teamKey === "A") m.scoreA += delta; else m.scoreB += delta;
         m.rallyCounter += 1;
         logServiceEvent(matchId, teamKey);
-        if (autoRotate && m.serverTeam && m.serverTeam !== teamKey) {
-            manualRotateInternal(matchId, teamKey);
+        var sideOut = m.serverTeam && m.serverTeam !== teamKey;
+        if (sideOut) {
+            var brokenServerTeam = m.serverTeam;
+            var brokenServerPlayer = brokenServerTeam === "A" ? m.serverPlayerA : m.serverPlayerB;
+            applyServerBreakCooldown(matchId, brokenServerTeam, brokenServerPlayer);
+
+            if (positionRotationEnabled) {
+                rotateTeamPositionsInternal(matchId, teamKey);
+            }
+
+            m.serverTeam = teamKey;
+            if (teamKey === "A") m.serverPlayerA = null;
+            else m.serverPlayerB = null;
+
+            if (serverRotationEnabled) {
+                var servingTeamName = teamKey === "A" ? teams[m.team1Index].name : teams[m.team2Index].name;
+                m.serverReminder = "Serve broken. Pick a new server for " + servingTeamName + ".";
+            } else {
+                var players = teamKey === "A"
+                    ? (m.activePlayersA || teams[m.team1Index].players || [])
+                    : (m.activePlayersB || teams[m.team2Index].players || []);
+                var rot = teamKey === "A" ? (m.rotationA || []) : (m.rotationB || []);
+                var pos1Num = rot[0] || 1;
+                var fallbackServer = players[pos1Num - 1] || null;
+                if (teamKey === "A") m.serverPlayerA = fallbackServer;
+                else m.serverPlayerB = fallbackServer;
+                m.serverReminder = "";
+            }
         }
         checkSetComplete(matchId);
     } else {
@@ -52,6 +86,9 @@ function changeScore(matchId, teamKey, delta) {
     refreshScoreUI(matchId);
     renderRotation(matchId, "A");
     renderRotation(matchId, "B");
+    highlightServerButton(matchId);
+    updateServerWarnings(matchId);
+    renderServerReminder(matchId);
     updateStandings();
     renderServiceLogTable(matchId);
     saveToFirebase();
@@ -84,6 +121,7 @@ function checkSetComplete(matchId) {
     m.serverTeam = null;
     m.serverPlayerA = null;
     m.serverPlayerB = null;
+    m.serverReminder = "";
 }
 
 function undoLastPoint(matchId, teamKey) {
@@ -104,6 +142,9 @@ function undoLastPoint(matchId, teamKey) {
     m.serverTeam = last.prevServerTeam;
     m.serverPlayerA = last.prevServerPlayerA;
     m.serverPlayerB = last.prevServerPlayerB;
+    m.serverReminder = last.prevServerReminder || "";
+    m.serverCooldownA = last.prevServerCooldownA || {};
+    m.serverCooldownB = last.prevServerCooldownB || {};
     m.rallyCounter = last.prevRallyCounter;
     m.pendingSubLogA = null;
     m.pendingSubLogB = null;
@@ -118,6 +159,8 @@ function undoLastPoint(matchId, teamKey) {
     renderRotation(matchId, "A");
     renderRotation(matchId, "B");
     highlightServerButton(matchId);
+    updateServerWarnings(matchId);
+    renderServerReminder(matchId);
     updateStandings();
     renderServiceLogTable(matchId);
     saveToFirebase();

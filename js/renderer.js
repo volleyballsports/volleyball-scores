@@ -149,6 +149,7 @@ function buildMatchCardHTML(matchId, t1Index, t2Index, isFinal) {
         // Server selection (scorer only)
         "  <div class='scorer-only mt-16'>" +
         "    <div class='section-title'>Choose Server</div>" +
+        "    <div id='serverReminder_" + matchId + "' class='server-rotation-reminder'></div>" +
         "    <div class='mt-6'><strong style='font-size:0.8rem;'>" + escHtml(t1.name) + ":</strong><br/><span id='srvContainer_" + matchId + "_A'></span><div id='serverWarning_" + matchId + "_A' class='server-position-warning'></div></div>" +
         "    <div class='mt-6'><strong style='font-size:0.8rem;'>" + escHtml(t2.name) + ":</strong><br/><span id='srvContainer_" + matchId + "_B'></span><div id='serverWarning_" + matchId + "_B' class='server-position-warning'></div></div>" +
         "  </div>" +

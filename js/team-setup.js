@@ -22,4 +22,9 @@ function renderTeamSetup() {
             "</div>";
         container.insertAdjacentHTML("beforeend", html);
     });
+
+    var positionRotationToggle = document.getElementById("positionRotationToggle");
+    if (positionRotationToggle) positionRotationToggle.checked = !!positionRotationEnabled;
+    var serverRotationToggle = document.getElementById("serverRotationToggle");
+    if (serverRotationToggle) serverRotationToggle.checked = !!serverRotationEnabled;
 }
