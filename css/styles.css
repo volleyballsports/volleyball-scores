@@ -289,13 +289,14 @@ body::before {
 
 .rot-row {
     display: flex;
-    justify-content: center;
+    justify-content: stretch;
     gap: 4px;
     margin: 3px 0;
 }
 
 .rot-pos {
-    min-width: 58px;
+    flex: 1;
+    min-width: 0;
     padding: 4px 6px;
     border-radius: 6px;
     background: var(--bg);
@@ -304,6 +305,11 @@ body::before {
     font-family: var(--mono);
     text-align: center;
     color: var(--text-dim);
+}
+
+/* Right half: mirror column order so front row (4,3,2) stays nearest the net */
+.court-right .rot-row {
+    flex-direction: row-reverse;
 }
 
 .rot-pos.draggable { cursor: grab; }
@@ -498,16 +504,6 @@ body::before {
     border: none;
     padding: 0;
     width: 100%;
-}
-/* Compact position cells inside the court halves */
-.court-half .rot-pos {
-    min-width: 0;
-    flex: 1;
-    font-size: 0.65rem;
-    padding: 3px 2px;
-}
-.court-half .rot-row {
-    gap: 2px;
 }
 
 /* Rotate/Undo buttons inside each half */
