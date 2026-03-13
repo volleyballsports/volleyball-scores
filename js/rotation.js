@@ -94,16 +94,20 @@ function renderRotation(matchId, teamKey) {
             label + "</div>";
     }
 
+    // Vertical layout: 3 rows × 2 cols [back | front]
+    // CSS reverses column order for .court-right so "front" is always near the net.
     container.innerHTML =
         "<div class='rot-row'>" +
-        "  " + posCell(2, slotLabel(pos2), serverCourtPos === 2) +
-        "  " + posCell(3, slotLabel(pos3), serverCourtPos === 3) +
+        "  " + posCell(5, slotLabel(pos5), serverCourtPos === 5) +
         "  " + posCell(4, slotLabel(pos4), serverCourtPos === 4) +
         "</div>" +
         "<div class='rot-row'>" +
-        "  " + posCell(1, slotLabel(pos1), serverCourtPos === 1) +
         "  " + posCell(6, slotLabel(pos6), serverCourtPos === 6) +
-        "  " + posCell(5, slotLabel(pos5), serverCourtPos === 5) +
+        "  " + posCell(3, slotLabel(pos3), serverCourtPos === 3) +
+        "</div>" +
+        "<div class='rot-row'>" +
+        "  " + posCell(1, slotLabel(pos1), serverCourtPos === 1) +
+        "  " + posCell(2, slotLabel(pos2), serverCourtPos === 2) +
         "</div>";
 
     // Attach touch listeners after rendering.
