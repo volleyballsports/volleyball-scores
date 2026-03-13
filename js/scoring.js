@@ -128,6 +128,8 @@ function checkSetComplete(matchId) {
     m.serverPlayerB = null;
     m.nextServerTeam = null;
     m.serverReminder = "";
+    m.serverCooldownA = {};
+    m.serverCooldownB = {};
 }
 
 function undoLastPoint(matchId) {
