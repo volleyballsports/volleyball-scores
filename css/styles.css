@@ -307,10 +307,6 @@ body::before {
     color: var(--text-dim);
 }
 
-/* Right half: mirror column order so front row (4,3,2) stays nearest the net */
-.court-right .rot-row {
-    flex-direction: row-reverse;
-}
 
 .rot-pos.draggable { cursor: grab; }
 .rot-pos.drag-over { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-glow); }

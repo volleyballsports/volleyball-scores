@@ -33,6 +33,10 @@ function swapCourtView(matchId) {
         halfA.classList.remove('court-right'); halfA.classList.add('court-left');
         halfB.classList.remove('court-left');  halfB.classList.add('court-right');
     }
+
+    // Re-render rotation grids so column mirroring reflects the new side
+    renderRotation(matchId, 'A');
+    renderRotation(matchId, 'B');
 }
 
 function renderRotation(matchId, teamKey) {
@@ -94,22 +98,26 @@ function renderRotation(matchId, teamKey) {
             label + "</div>";
     }
 
-    // Vertical layout: 3 rows × 2 cols
-    // Default column order: [back(1,6,5) | front(2,3,4)] so front is on the RIGHT (near net for court-left).
-    // CSS row-reverse on .court-right flips columns so front stays near the net after a swap.
-    container.innerHTML =
-        "<div class='rot-row'>" +
-        "  " + posCell(1, slotLabel(pos1), serverCourtPos === 1) +
-        "  " + posCell(2, slotLabel(pos2), serverCourtPos === 2) +
-        "</div>" +
-        "<div class='rot-row'>" +
-        "  " + posCell(6, slotLabel(pos6), serverCourtPos === 6) +
-        "  " + posCell(3, slotLabel(pos3), serverCourtPos === 3) +
-        "</div>" +
-        "<div class='rot-row'>" +
-        "  " + posCell(5, slotLabel(pos5), serverCourtPos === 5) +
-        "  " + posCell(4, slotLabel(pos4), serverCourtPos === 4) +
-        "</div>";
+    // Vertical layout: 3 rows × 2 cols.
+    // Left half:  [back | front] — positions 1,6,5 on left;  2,3,4 on right (nearest net).
+    // Right half: [front | back] — positions 2,3,4 on left (nearest net); 1,6,5 on right.
+    var halfEl = document.getElementById('courtHalf' + teamKey + '_' + matchId);
+    var isRight = halfEl && halfEl.classList.contains('court-right');
+
+    function rotRow(left, right) {
+        return "<div class='rot-row'>" +
+            posCell(left,  slotLabel(left  === 1 ? pos1 : left  === 2 ? pos2 : left  === 3 ? pos3 : left  === 4 ? pos4 : left  === 5 ? pos5 : pos6), serverCourtPos === left) +
+            posCell(right, slotLabel(right === 1 ? pos1 : right === 2 ? pos2 : right === 3 ? pos3 : right === 4 ? pos4 : right === 5 ? pos5 : pos6), serverCourtPos === right) +
+            "</div>";
+    }
+
+    if (isRight) {
+        // Mirrored: front row (2,3,4) on the left side, back row (1,6,5) on the right
+        container.innerHTML = rotRow(2, 1) + rotRow(3, 6) + rotRow(4, 5);
+    } else {
+        // Normal: back row (1,6,5) on the left side, front row (2,3,4) on the right
+        container.innerHTML = rotRow(1, 2) + rotRow(6, 3) + rotRow(5, 4);
+    }
 
     // Attach touch listeners after rendering.
     // passive:false on touchmove/touchend so preventDefault() can block scroll and suppress click.
