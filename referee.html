@@ -32,8 +32,15 @@
         <div class="referee-header-row">
             <h1>Referee View</h1>
             <div class="referee-header-actions">
+                <div class="theme-selector-row referee-theme-row">
+                    <span class="theme-selector-label">Theme</span>
+                    <select id="themeSelector" class="theme-selector" aria-label="Display theme" onchange="setDisplayTheme(this.value)">
+                        <option value="night">Dark</option>
+                        <option value="day">Light</option>
+                    </select>
+                </div>
                 <button class="court-swap-btn" onclick="swapRefereeSides()">⇄ Swap Sides</button>
-                <a href="index.html" class="btn-small">Back to Scoring</a>
+                <a href="index.html" class="header-pill-link">Scorer View</a>
             </div>
         </div>
 
@@ -43,6 +50,7 @@
 
     <script src="js/config.js"></script>
     <script src="js/utils.js"></script>
+    <script src="js/mode-manager.js"></script>
     <script src="js/referee.js"></script>
 </body>
 

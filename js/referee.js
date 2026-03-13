@@ -9,6 +9,8 @@ var app = firebase.initializeApp(FIREBASE_CONFIG);
 var db = firebase.database();
 var dbRef = db.ref("tournament");
 
+initializeTheme();
+
 function attemptRefereeLogin() {
     var pw = document.getElementById("passwordInput").value;
     if (pw === SCORER_PASSWORD) {
