@@ -65,22 +65,9 @@ function changeScore(matchId, teamKey, delta) {
             m.serverPlayerA = null;
             m.serverPlayerB = null;
 
-            if (serverRotationEnabled) {
-                var servingTeamName = teamKey === "A" ? teams[m.team1Index].name : teams[m.team2Index].name;
-                m.serverReminder = "Serve broken. Pick a new server for " + servingTeamName + ".";
-                m.nextServerTeam = teamKey;
-            } else {
-                var players = teamKey === "A"
-                    ? (m.activePlayersA || teams[m.team1Index].players || [])
-                    : (m.activePlayersB || teams[m.team2Index].players || []);
-                var rot = teamKey === "A" ? (m.rotationA || []) : (m.rotationB || []);
-                var pos1Num = rot[0] || 1;
-                var fallbackServer = players[pos1Num - 1] || null;
-                if (teamKey === "A") m.serverPlayerA = fallbackServer;
-                else m.serverPlayerB = fallbackServer;
-                m.serverReminder = "";
-                m.nextServerTeam = null;
-            }
+            var servingTeamName = teamKey === "A" ? teams[m.team1Index].name : teams[m.team2Index].name;
+            m.serverReminder = "Serve broken. Pick a new server for " + servingTeamName + ".";
+            m.nextServerTeam = teamKey;
         }
         checkSetComplete(matchId);
     } else {

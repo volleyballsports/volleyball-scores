@@ -9,11 +9,12 @@ function setServer(matchId, teamKey, playerName) {
     var activeServerTeam = m.serverTeam;
     var activeServerPlayer = activeServerTeam === "A" ? m.serverPlayerA : m.serverPlayerB;
     var canChangeServer = !!m.nextServerTeam;
-    var isOpeningScore = (m.scoreA || 0) === 0 && (m.scoreB || 0) === 0;
-    if (!canChangeServer && activeServerTeam && activeServerPlayer &&
-        teamKey !== activeServerTeam && !isOpeningScore) {
-        alert("Server can only be changed after a side-out or if the current server is substituted.");
-        return;
+    if (!canChangeServer && activeServerTeam && activeServerPlayer) {
+        var isCurrentServer = activeServerTeam === teamKey && activeServerPlayer === playerName;
+        if (!isCurrentServer) {
+            alert("Server can only be changed after a side-out or if the current server is substituted.");
+            return;
+        }
     }
 
     if (m.nextServerTeam && teamKey !== m.nextServerTeam) {

@@ -8,6 +8,7 @@ function getStandingsData() {
     var matches = new Array(n).fill(0); // matches completed
     var pf = new Array(n).fill(0);     // points for
     var pa = new Array(n).fill(0);     // points against
+    var setsLost = new Array(n).fill(0); // sets lost in completed matches
     schedule.forEach(function (s) {
         var m = matchData[s.id]; if (!m) return;
         var totalPointsA = 0;
@@ -30,12 +31,14 @@ function getStandingsData() {
         var setsA = m.setsWonA || 0;
         var setsB = m.setsWonB || 0;
         if (m.matchComplete) {
+            setsLost[s.team1Index] += setsB;
+            setsLost[s.team2Index] += setsA;
             if (setsA > setsB) wins[s.team1Index]++;
             else wins[s.team2Index]++;
         }
     });
     var data = [];
-    for (var i = 0; i < n; i++) data.push({ idx: i, name: teams[i].name, wins: wins[i], matches: matches[i], pf: pf[i], pa: pa[i] });
+    for (var i = 0; i < n; i++) data.push({ idx: i, name: teams[i].name, wins: wins[i], matches: matches[i], setsLost: setsLost[i], pf: pf[i], pa: pa[i] });
     data.sort(function (a, b) {
         if (b.wins !== a.wins) return b.wins - a.wins;
         var diffA = a.pf - a.pa;
@@ -50,16 +53,14 @@ function updateStandings() {
     var table = document.getElementById("standingsTable");
     if (!table) return;
     var data = getStandingsData();
-    var html = "<tr><th>#</th><th>Team</th><th>MW</th><th>M</th><th>PF</th><th>PA</th><th>Diff</th></tr>";
+    var html = "<tr><th>Team</th><th>Matches Played</th><th>Matches Won</th><th>Sets Lost</th><th>Points Difference</th></tr>";
     data.forEach(function (row, idx) {
         var diff = row.pf - row.pa;
         html += "<tr>" +
-            "<td>" + (idx + 1) + "</td>" +
             "<td>" + escHtml(row.name) + "</td>" +
-            "<td style='font-weight:700;'>" + row.wins + "</td>" +
             "<td>" + row.matches + "</td>" +
-            "<td>" + row.pf + "</td>" +
-            "<td>" + row.pa + "</td>" +
+            "<td style='font-weight:700;'>" + row.wins + "</td>" +
+            "<td>" + row.setsLost + "</td>" +
             "<td style='color:" + (diff >= 0 ? "var(--green)" : "var(--red)") + ";font-weight:600;'>" + (diff >= 0 ? "+" : "") + diff + "</td>" +
             "</tr>";
     });
