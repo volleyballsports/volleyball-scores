@@ -39,8 +39,8 @@ function changeScore(matchId, teamKey, delta) {
             prevServerPlayerB: m.serverPlayerB,
             prevNextServerTeam: m.nextServerTeam || null,
             prevServerReminder: m.serverReminder || "",
-            prevServerCooldownA: JSON.parse(JSON.stringify(m.serverCooldownA || {})),
-            prevServerCooldownB: JSON.parse(JSON.stringify(m.serverCooldownB || {})),
+            prevRecentServersA: (m.recentServersA || []).slice(),
+            prevRecentServersB: (m.recentServersB || []).slice(),
             prevRallyCounter: m.rallyCounter,
             prevCurrentSet: m.currentSet || 1,
             prevSetsWonA: m.setsWonA || 0,
@@ -115,8 +115,8 @@ function checkSetComplete(matchId) {
     m.serverPlayerB = null;
     m.nextServerTeam = null;
     m.serverReminder = "";
-    m.serverCooldownA = {};
-    m.serverCooldownB = {};
+    m.recentServersA = [];
+    m.recentServersB = [];
 }
 
 function undoLastPoint(matchId) {
@@ -135,8 +135,8 @@ function undoLastPoint(matchId) {
     m.serverPlayerB = last.prevServerPlayerB;
     m.nextServerTeam = last.prevNextServerTeam || null;
     m.serverReminder = last.prevServerReminder || "";
-    m.serverCooldownA = last.prevServerCooldownA || {};
-    m.serverCooldownB = last.prevServerCooldownB || {};
+    m.recentServersA = last.prevRecentServersA || [];
+    m.recentServersB = last.prevRecentServersB || [];
     m.rallyCounter = last.prevRallyCounter;
     m.pendingSubLogA = null;
     m.pendingSubLogB = null;

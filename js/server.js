@@ -23,13 +23,10 @@ function setServer(matchId, teamKey, playerName) {
         return;
     }
 
-    if (serverRotationEnabled) {
-        var cooldowns = teamKey === "A" ? (m.serverCooldownA || {}) : (m.serverCooldownB || {});
-        var remaining = cooldowns[playerName] || 0;
-        if (remaining > 0) {
-            alert(playerName + " must wait for " + remaining + " more server change" + (remaining === 1 ? "" : "s") + " before serving again.");
-            return;
-        }
+    var remaining = getServeRemaining(m, teamKey, playerName);
+    if (remaining > 0) {
+        alert(playerName + " cannot serve yet — " + remaining + " more distinct player" + (remaining === 1 ? "" : "s") + " must serve first.");
+        return;
     }
 
     m.serverTeam = teamKey;
@@ -51,12 +48,17 @@ function setServer(matchId, teamKey, playerName) {
     saveToFirebase();
 }
 
+function getServeRemaining(m, teamKey, playerName) {
+    var recent = teamKey === "A" ? (m.recentServersA || []) : (m.recentServersB || []);
+    var idx = recent.indexOf(playerName);
+    return idx === -1 ? 0 : 5 - idx;
+}
+
 function isServerSelectionAllowed(m, teamKey, playerName) {
     if (!m || !playerName) return false;
     if (m.nextServerTeam && teamKey !== m.nextServerTeam) return false;
     if (m.nextServerTeam && ((teamKey === "A" && m.serverPlayerA) || (teamKey === "B" && m.serverPlayerB))) return false;
-    var cooldowns = teamKey === "A" ? (m.serverCooldownA || {}) : (m.serverCooldownB || {});
-    return (cooldowns[playerName] || 0) <= 0;
+    return getServeRemaining(m, teamKey, playerName) === 0;
 }
 
 function shouldShowNextServerCandidates(m, teamKey) {
@@ -77,16 +79,15 @@ function renderServerReminder(matchId) {
 }
 
 function applyServeCompletionCooldown(matchId, teamKey, serverName) {
-    if (!serverRotationEnabled || !serverName) return;
+    if (!serverName) return;
     var m = matchData[matchId]; if (!m) return;
-    var cooldowns = teamKey === "A" ? (m.serverCooldownA || {}) : (m.serverCooldownB || {});
-    Object.keys(cooldowns).forEach(function (name) {
-        cooldowns[name] = Math.max(0, (cooldowns[name] || 0) - 1);
-        if (cooldowns[name] <= 0) delete cooldowns[name];
-    });
-    cooldowns[serverName] = 5;
-    if (teamKey === "A") m.serverCooldownA = cooldowns;
-    else m.serverCooldownB = cooldowns;
+    var key = teamKey === "A" ? "recentServersA" : "recentServersB";
+    var recent = (m[key] || []).slice();
+    var idx = recent.indexOf(serverName);
+    if (idx !== -1) recent.splice(idx, 1);
+    recent.unshift(serverName);
+    if (recent.length > 5) recent = recent.slice(0, 5);
+    m[key] = recent;
 }
 
 function getServerPositionWarning(matchId, teamKey, playerName) {
@@ -132,28 +133,28 @@ function renderServerButtons(matchId) {
     if (containerA) {
         containerA.innerHTML = playersA.map(function (p) {
             var sid = "srv_" + matchId + "_A_" + safeId(p);
-            var remaining = (m.serverCooldownA || {})[p] || 0;
+            var remaining = getServeRemaining(m, "A", p);
             var blockedBySideOut = m.nextServerTeam && m.nextServerTeam !== "A";
             var title = remaining > 0
-                ? " title='Wait " + remaining + " change(s)'"
+                ? " title='" + remaining + " more player" + (remaining === 1 ? "" : "s") + " must serve before " + escHtml(p) + " can serve again'"
                 : (blockedBySideOut ? " title='Pick the next server from the other team first'" : "");
             var isSelected = m.serverPlayerA === p;
             var isCandidate = shouldShowNextServerCandidates(m, "A") && !isSelected && isServerSelectionAllowed(m, "A", p);
-            var classes = "player-btn" + (remaining > 0 ? " cooling-down" : "") + (blockedBySideOut ? " cooling-down" : "") + (isCandidate ? " next-server-candidate" : "");
+            var classes = "player-btn" + (remaining > 0 ? " server-blocked" : "") + (blockedBySideOut ? " cooling-down" : "") + (isCandidate ? " next-server-candidate" : "");
             return "<span id='" + sid + "' class='" + classes + "'" + title + " onclick=\"setServer('" + matchId + "','A','" + escJs(p) + "')\">" + escHtml(p) + "</span>";
         }).join("");
     }
     if (containerB) {
         containerB.innerHTML = playersB.map(function (p) {
             var sid = "srv_" + matchId + "_B_" + safeId(p);
-            var remaining = (m.serverCooldownB || {})[p] || 0;
+            var remaining = getServeRemaining(m, "B", p);
             var blockedBySideOut = m.nextServerTeam && m.nextServerTeam !== "B";
             var title = remaining > 0
-                ? " title='Wait " + remaining + " change(s)'"
+                ? " title='" + remaining + " more player" + (remaining === 1 ? "" : "s") + " must serve before " + escHtml(p) + " can serve again'"
                 : (blockedBySideOut ? " title='Pick the next server from the other team first'" : "");
             var isSelected = m.serverPlayerB === p;
             var isCandidate = shouldShowNextServerCandidates(m, "B") && !isSelected && isServerSelectionAllowed(m, "B", p);
-            var classes = "player-btn" + (remaining > 0 ? " cooling-down" : "") + (blockedBySideOut ? " cooling-down" : "") + (isCandidate ? " next-server-candidate" : "");
+            var classes = "player-btn" + (remaining > 0 ? " server-blocked" : "") + (blockedBySideOut ? " cooling-down" : "") + (isCandidate ? " next-server-candidate" : "");
             return "<span id='" + sid + "' class='" + classes + "'" + title + " onclick=\"setServer('" + matchId + "','B','" + escJs(p) + "')\">" + escHtml(p) + "</span>";
         }).join("");
     }
@@ -189,11 +190,15 @@ function highlightServerButton(matchId) {
 
     pA.forEach(function (p) {
         var el = document.getElementById("srv_" + matchId + "_A_" + safeId(p));
-        if (el && shouldShowNextServerCandidates(m, "A") && p !== m.serverPlayerA && isServerSelectionAllowed(m, "A", p)) el.classList.add("next-server-candidate");
+        if (!el) return;
+        if (getServeRemaining(m, "A", p) > 0) el.classList.add("server-blocked");
+        if (shouldShowNextServerCandidates(m, "A") && p !== m.serverPlayerA && isServerSelectionAllowed(m, "A", p)) el.classList.add("next-server-candidate");
     });
     pB.forEach(function (p) {
         var el = document.getElementById("srv_" + matchId + "_B_" + safeId(p));
-        if (el && shouldShowNextServerCandidates(m, "B") && p !== m.serverPlayerB && isServerSelectionAllowed(m, "B", p)) el.classList.add("next-server-candidate");
+        if (!el) return;
+        if (getServeRemaining(m, "B", p) > 0) el.classList.add("server-blocked");
+        if (shouldShowNextServerCandidates(m, "B") && p !== m.serverPlayerB && isServerSelectionAllowed(m, "B", p)) el.classList.add("next-server-candidate");
     });
 }
 

@@ -23,13 +23,14 @@ function loadFromFirebase() {
 }
 
 function getCooldownRemaining(m, teamKey, playerName) {
-    var cooldowns = teamKey === "A" ? (m.serverCooldownA || {}) : (m.serverCooldownB || {});
-    return cooldowns[playerName] || 0;
+    var recent = teamKey === "A" ? (m.recentServersA || []) : (m.recentServersB || []);
+    var idx = recent.indexOf(playerName);
+    return idx === -1 ? 0 : 5 - idx;
 }
 
 function getCooldownText(m, teamKey, playerName) {
     var remaining = getCooldownRemaining(m, teamKey, playerName);
-    return remaining > 0 ? ("ready in " + remaining) : "ready";
+    return remaining > 0 ? ("needs " + remaining + " more") : "ready";
 }
 
 function shouldShowNextServerCandidates(m, teamKey) {

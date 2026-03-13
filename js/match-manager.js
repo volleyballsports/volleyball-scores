@@ -16,8 +16,8 @@ function createEmptyMatchState(matchId, t1, t2) {
         serverPlayerB: null,
         nextServerTeam: null,
         serverReminder: "",
-        serverCooldownA: {},
-        serverCooldownB: {},
+        recentServersA: [],
+        recentServersB: [],
         rallyCounter: 0,
         serviceLog: [],
         subsA: [],
@@ -48,8 +48,8 @@ function ensureSetState(matchId) {
     if (m.matchComplete === undefined) m.matchComplete = false;
     if (m.serverReminder === undefined) m.serverReminder = "";
     if (m.nextServerTeam === undefined) m.nextServerTeam = null;
-    if (!m.serverCooldownA) m.serverCooldownA = {};
-    if (!m.serverCooldownB) m.serverCooldownB = {};
+    if (!m.recentServersA) m.recentServersA = [];
+    if (!m.recentServersB) m.recentServersB = [];
 }
 
 // Ensure per-match rosters are initialized (call before using activePlayers)
