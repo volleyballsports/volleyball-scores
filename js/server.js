@@ -6,6 +6,12 @@ function setServer(matchId, teamKey, playerName) {
     if (!isScorer) return;
     var m = matchData[matchId]; if (!m) return;
 
+    if (m.nextServerTeam && teamKey !== m.nextServerTeam) {
+        var requiredTeamName = m.nextServerTeam === "A" ? teams[m.team1Index].name : teams[m.team2Index].name;
+        alert("Serve was just broken. Please pick the next server from " + requiredTeamName + ".");
+        return;
+    }
+
     if (serverRotationEnabled) {
         var cooldowns = teamKey === "A" ? (m.serverCooldownA || {}) : (m.serverCooldownB || {});
         var remaining = cooldowns[playerName] || 0;
@@ -112,8 +118,11 @@ function renderServerButtons(matchId) {
         containerA.innerHTML = playersA.map(function (p) {
             var sid = "srv_" + matchId + "_A_" + safeId(p);
             var remaining = (m.serverCooldownA || {})[p] || 0;
-            var title = remaining > 0 ? " title='Wait " + remaining + " change(s)'" : "";
-            var classes = "player-btn" + (remaining > 0 ? " cooling-down" : "");
+            var blockedBySideOut = m.nextServerTeam && m.nextServerTeam !== "A";
+            var title = remaining > 0
+                ? " title='Wait " + remaining + " change(s)'"
+                : (blockedBySideOut ? " title='Pick the next server from the other team first'" : "");
+            var classes = "player-btn" + (remaining > 0 ? " cooling-down" : "") + (blockedBySideOut ? " cooling-down" : "");
             return "<span id='" + sid + "' class='" + classes + "'" + title + " onclick=\"setServer('" + matchId + "','A','" + escJs(p) + "')\">" + escHtml(p) + "</span>";
         }).join("");
     }
@@ -121,8 +130,11 @@ function renderServerButtons(matchId) {
         containerB.innerHTML = playersB.map(function (p) {
             var sid = "srv_" + matchId + "_B_" + safeId(p);
             var remaining = (m.serverCooldownB || {})[p] || 0;
-            var title = remaining > 0 ? " title='Wait " + remaining + " change(s)'" : "";
-            var classes = "player-btn" + (remaining > 0 ? " cooling-down" : "");
+            var blockedBySideOut = m.nextServerTeam && m.nextServerTeam !== "B";
+            var title = remaining > 0
+                ? " title='Wait " + remaining + " change(s)'"
+                : (blockedBySideOut ? " title='Pick the next server from the other team first'" : "");
+            var classes = "player-btn" + (remaining > 0 ? " cooling-down" : "") + (blockedBySideOut ? " cooling-down" : "");
             return "<span id='" + sid + "' class='" + classes + "'" + title + " onclick=\"setServer('" + matchId + "','B','" + escJs(p) + "')\">" + escHtml(p) + "</span>";
         }).join("");
     }

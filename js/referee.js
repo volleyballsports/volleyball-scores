@@ -102,6 +102,18 @@ function renderRefereeView() {
             return "<div class='ref-server-row'><span>" + (i + 1) + ". " + escHtml(tName(entry.teamKey)) + " — " + escHtml(entry.player) + "</span><span>" + getCooldownText(m, entry.teamKey, entry.player) + "</span></div>";
         }).join("")
         : "<div class='ref-muted'>No serves recorded yet.</div>";
+    var subSummary = (m.serviceLog || []).filter(function (evt) {
+        return evt.eventType === "sub";
+    });
+    var subSummaryHtml = subSummary.length
+        ? subSummary.map(function (evt, i) {
+            var score = (evt.scoreA != null && evt.scoreB != null) ? (evt.scoreA + "–" + evt.scoreB) : "—";
+            var point = evt.rally != null ? ("Rally " + evt.rally) : ("Set " + (evt.set || 1) + ", " + score);
+            var teamName = tName(evt.teamKey);
+            var players = evt.playerOut ? (evt.playerOut + " ⇄ " + evt.playerIn) : evt.playerIn;
+            return "<div class='ref-server-row'><span>" + (i + 1) + ". " + escHtml(teamName) + " — " + escHtml(players) + "</span><span>" + escHtml(point) + "</span></div>";
+        }).join("")
+        : "<div class='ref-muted'>No substitutions yet.</div>";
 
     var html = "" +
         "<div class='ref-scoreboard'>" +
@@ -115,6 +127,8 @@ function renderRefereeView() {
         "<div class='ref-server-current'>Current Server: " + escHtml(currentServer) + "</div>" +
         "<div class='ref-section-title'>Server Order Summary</div>" +
         "<div class='ref-server-list'>" + historyHtml + "</div>" +
+        "<div class='ref-section-title'>Substitution Summary</div>" +
+        "<div class='ref-server-list'>" + subSummaryHtml + "</div>" +
         "<div class='ref-rosters'>" +
         "<div><div class='ref-section-title'>" + escHtml(tName(leftKey)) + " · On Court</div><div class='ref-pill-wrap'>" + activePlayers(leftKey).map(function (p) { return "<span class='player-btn'>" + escHtml(p) + "</span>"; }).join("") + "</div></div>" +
         "<div><div class='ref-section-title'>" + escHtml(tName(rightKey)) + " · On Court</div><div class='ref-pill-wrap'>" + activePlayers(rightKey).map(function (p) { return "<span class='player-btn'>" + escHtml(p) + "</span>"; }).join("") + "</div></div>" +
