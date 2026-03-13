@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Volleyball Referee View</title>
+    <title>Volleyball Current Match</title>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -15,22 +15,10 @@
 </head>
 
 <body class="viewer-mode referee-page">
-    <div id="loginOverlay" class="login-overlay" style="display:flex;">
-        <div class="login-box">
-            <h2>🏐 Enter Referee View</h2>
-            <p>Enter scorer password to access referee summary.</p>
-            <input type="password" id="passwordInput" placeholder="Scorer password" />
-            <div id="loginError" class="login-error">Incorrect password. Try again.</div>
-            <div class="login-buttons">
-                <a class="btn-viewer" href="index.html">Back</a>
-                <button class="btn-scorer" onclick="attemptRefereeLogin()">Enter Referee View</button>
-            </div>
-        </div>
-    </div>
-
+    
     <div class="container referee-container">
         <div class="referee-header-row">
-            <h1>Referee View</h1>
+            <h1>Current Match</h1>
             <div class="referee-header-actions">
                 <div class="theme-selector-row referee-theme-row">
                     <span class="theme-selector-label">Theme</span>
@@ -49,7 +37,7 @@
 
     <div class="view-pills-bottom">
         <a href="index.html" class="view-pill">Scorer View</a>
-        <span class="view-pill current" aria-current="page">Referee View</span>
+        <span class="view-pill current" aria-current="page">Current Match</span>
     </div>
 
     <script src="js/config.js"></script>

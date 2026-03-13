@@ -2,7 +2,6 @@ var teams = [];
 var schedule = [];
 var matchData = {};
 var activeMatchId = null;
-var refereeLoggedIn = false;
 var refereeSwapped = false;
 
 var app = firebase.initializeApp(FIREBASE_CONFIG);
@@ -10,18 +9,7 @@ var db = firebase.database();
 var dbRef = db.ref("tournament");
 
 initializeTheme();
-
-function attemptRefereeLogin() {
-    var pw = document.getElementById("passwordInput").value;
-    if (pw === SCORER_PASSWORD) {
-        refereeLoggedIn = true;
-        document.getElementById("loginOverlay").style.display = "none";
-        document.getElementById("loginError").style.display = "none";
-        loadFromFirebase();
-    } else {
-        document.getElementById("loginError").style.display = "block";
-    }
-}
+loadFromFirebase();
 
 function loadFromFirebase() {
     dbRef.on("value", function (snapshot) {
@@ -44,15 +32,22 @@ function getCooldownText(m, teamKey, playerName) {
     return remaining > 0 ? ("ready in " + remaining) : "ready";
 }
 
+function shouldShowNextServerCandidates(m, teamKey) {
+    if (!m) return false;
+    if (m.nextServerTeam) return m.nextServerTeam === teamKey;
+    if (!m.serverTeam) return true;
+    var selected = teamKey === "A" ? m.serverPlayerA : m.serverPlayerB;
+    return m.serverTeam === teamKey && !selected;
+}
+
 function isNextServerCandidate(m, teamKey, playerName) {
     if (!m || !playerName) return false;
     if (m.nextServerTeam && teamKey !== m.nextServerTeam) return false;
     if (m.nextServerTeam && ((teamKey === "A" && m.serverPlayerA) || (teamKey === "B" && m.serverPlayerB))) return false;
-    return getCooldownRemaining(m, teamKey, playerName) <= 0;
+    return shouldShowNextServerCandidates(m, teamKey) && getCooldownRemaining(m, teamKey, playerName) <= 0;
 }
 
 function renderRefereeView() {
-    if (!refereeLoggedIn) return;
     var emptyEl = document.getElementById("refereeEmpty");
     var viewEl = document.getElementById("refereeView");
 
@@ -207,7 +202,3 @@ function swapRefereeSides() {
     refereeSwapped = !refereeSwapped;
     renderRefereeView();
 }
-
-document.getElementById("passwordInput").addEventListener("keyup", function (e) {
-    if (e.key === "Enter") attemptRefereeLogin();
-});

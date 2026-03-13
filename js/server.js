@@ -59,6 +59,14 @@ function isServerSelectionAllowed(m, teamKey, playerName) {
     return (cooldowns[playerName] || 0) <= 0;
 }
 
+function shouldShowNextServerCandidates(m, teamKey) {
+    if (!m) return false;
+    if (m.nextServerTeam) return m.nextServerTeam === teamKey;
+    if (!m.serverTeam) return true;
+    var selected = teamKey === "A" ? m.serverPlayerA : m.serverPlayerB;
+    return m.serverTeam === teamKey && !selected;
+}
+
 function renderServerReminder(matchId) {
     var m = matchData[matchId]; if (!m) return;
     var reminderEl = document.getElementById("serverReminder_" + matchId);
@@ -139,7 +147,7 @@ function renderServerButtons(matchId) {
                 ? " title='Wait " + remaining + " change(s)'"
                 : (blockedBySideOut ? " title='Pick the next server from the other team first'" : "");
             var isSelected = m.serverPlayerA === p;
-            var isCandidate = !isSelected && isServerSelectionAllowed(m, "A", p);
+            var isCandidate = shouldShowNextServerCandidates(m, "A") && !isSelected && isServerSelectionAllowed(m, "A", p);
             var classes = "player-btn" + (remaining > 0 ? " cooling-down" : "") + (blockedBySideOut ? " cooling-down" : "") + (isCandidate ? " next-server-candidate" : "");
             return "<span id='" + sid + "' class='" + classes + "'" + title + " onclick=\"setServer('" + matchId + "','A','" + escJs(p) + "')\">" + escHtml(p) + "</span>";
         }).join("");
@@ -153,7 +161,7 @@ function renderServerButtons(matchId) {
                 ? " title='Wait " + remaining + " change(s)'"
                 : (blockedBySideOut ? " title='Pick the next server from the other team first'" : "");
             var isSelected = m.serverPlayerB === p;
-            var isCandidate = !isSelected && isServerSelectionAllowed(m, "B", p);
+            var isCandidate = shouldShowNextServerCandidates(m, "B") && !isSelected && isServerSelectionAllowed(m, "B", p);
             var classes = "player-btn" + (remaining > 0 ? " cooling-down" : "") + (blockedBySideOut ? " cooling-down" : "") + (isCandidate ? " next-server-candidate" : "");
             return "<span id='" + sid + "' class='" + classes + "'" + title + " onclick=\"setServer('" + matchId + "','B','" + escJs(p) + "')\">" + escHtml(p) + "</span>";
         }).join("");
@@ -190,11 +198,11 @@ function highlightServerButton(matchId) {
 
     pA.forEach(function (p) {
         var el = document.getElementById("srv_" + matchId + "_A_" + safeId(p));
-        if (el && p !== m.serverPlayerA && isServerSelectionAllowed(m, "A", p)) el.classList.add("next-server-candidate");
+        if (el && shouldShowNextServerCandidates(m, "A") && p !== m.serverPlayerA && isServerSelectionAllowed(m, "A", p)) el.classList.add("next-server-candidate");
     });
     pB.forEach(function (p) {
         var el = document.getElementById("srv_" + matchId + "_B_" + safeId(p));
-        if (el && p !== m.serverPlayerB && isServerSelectionAllowed(m, "B", p)) el.classList.add("next-server-candidate");
+        if (el && shouldShowNextServerCandidates(m, "B") && p !== m.serverPlayerB && isServerSelectionAllowed(m, "B", p)) el.classList.add("next-server-candidate");
     });
 }
 
