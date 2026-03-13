@@ -6,6 +6,15 @@ function setServer(matchId, teamKey, playerName) {
     if (!isScorer) return;
     var m = matchData[matchId]; if (!m) return;
 
+    var activeServerTeam = m.serverTeam;
+    var activeServerPlayer = activeServerTeam === "A" ? m.serverPlayerA : m.serverPlayerB;
+    var canChangeServer = !!m.nextServerTeam;
+    if (!canChangeServer && activeServerTeam && activeServerPlayer &&
+        (teamKey !== activeServerTeam || playerName !== activeServerPlayer)) {
+        alert("Server can only be changed after a side-out or if the current server is substituted.");
+        return;
+    }
+
     if (m.nextServerTeam && teamKey !== m.nextServerTeam) {
         var requiredTeamName = m.nextServerTeam === "A" ? teams[m.team1Index].name : teams[m.team2Index].name;
         alert("Serve was just broken. Please pick the next server from " + requiredTeamName + ".");
@@ -37,9 +46,7 @@ function setServer(matchId, teamKey, playerName) {
     renderRotation(matchId, "A");
     renderRotation(matchId, "B");
 
-    highlightServerButton(matchId);
-    updateServerWarnings(matchId);
-    renderServerReminder(matchId);
+    renderServerButtons(matchId);
     saveToFirebase();
 }
 
