@@ -22,6 +22,12 @@ function setServer(matchId, teamKey, playerName) {
     applyServerSelectionCooldown(matchId, teamKey, playerName);
     m.serverReminder = "";
 
+    // Keep the court visualization in sync immediately when server is picked
+    // from a court cell. Without this, the server slot highlight appears only
+    // after the next score update triggers a re-render.
+    renderRotation(matchId, "A");
+    renderRotation(matchId, "B");
+
     highlightServerButton(matchId);
     updateServerWarnings(matchId);
     renderServerReminder(matchId);
