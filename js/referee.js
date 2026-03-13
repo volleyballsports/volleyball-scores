@@ -53,7 +53,18 @@ function renderRefereeView() {
     var emptyEl = document.getElementById("refereeEmpty");
     var viewEl = document.getElementById("refereeView");
 
-    if (!activeMatchId || !matchData[activeMatchId]) {
+    var currentMatchId = activeMatchId;
+    if (!currentMatchId || !matchData[currentMatchId]) {
+        var scheduledIds = (schedule || []).map(function (s) { return s.id; });
+        for (var i = 0; i < scheduledIds.length; i++) {
+            if (matchData[scheduledIds[i]]) {
+                currentMatchId = scheduledIds[i];
+                break;
+            }
+        }
+    }
+
+    if (!currentMatchId || !matchData[currentMatchId]) {
         if (emptyEl) emptyEl.style.display = "block";
         if (viewEl) {
             viewEl.style.display = "none";
@@ -62,7 +73,7 @@ function renderRefereeView() {
         return;
     }
 
-    var m = matchData[activeMatchId];
+    var m = matchData[currentMatchId];
     var leftKey = refereeSwapped ? "B" : "A";
     var rightKey = refereeSwapped ? "A" : "B";
 
@@ -129,9 +140,10 @@ function renderRefereeView() {
     function renderPlayerPills(teamKey, players) {
         return players.map(function (p) {
             var classes = ["player-btn"];
-            if ((teamKey === "A" && m.serverPlayerA === p) || (teamKey === "B" && m.serverPlayerB === p)) classes.push("server-highlight");
+            var isSelected = (teamKey === "A" && m.serverPlayerA === p) || (teamKey === "B" && m.serverPlayerB === p);
+            if (isSelected) classes.push("server-highlight");
             if (getCooldownRemaining(m, teamKey, p) > 0) classes.push("cooling-down");
-            if (isNextServerCandidate(m, teamKey, p)) classes.push("next-server-candidate");
+            if (!isSelected && isNextServerCandidate(m, teamKey, p)) classes.push("next-server-candidate");
             return "<span class='" + classes.join(" ") + "'>" + escHtml(p) + "</span>";
         }).join("");
     }

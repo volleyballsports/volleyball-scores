@@ -89,7 +89,7 @@ function renderRotation(matchId, teamKey) {
             && tapSwapState.matchId === matchId
             && tapSwapState.teamKey === teamKey
             && tapSwapState.courtPos === courtPos;
-        var isValidServerCandidate = canPickServerFromCourt && isServerSelectionAllowed(m, teamKey, courtPlayer);
+        var isValidServerCandidate = canPickServerFromCourt && !isServerSlot && isServerSelectionAllowed(m, teamKey, courtPlayer);
         var classes = "rot-pos"
             + (isServerSlot ? " server-slot" : "")
             + (canRearrange ? " draggable" : "")
