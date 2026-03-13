@@ -87,49 +87,52 @@ function buildMatchCardHTML(matchId, t1Index, t2Index, isFinal) {
         "    <div id='setHistory_" + matchId + "' class='set-history'></div>" +
         "  </div>" +
 
-        // Team A row
-        "  <div class='team-row'>" +
-        "    <div class='team-left'>" +
-        (t1.logo ? "      <div class='team-logo' style=\"background-image:url('" + escHtml(t1.logo) + "')\"></div>" : "") +
-        "      <span class='team-name'>" + escHtml(t1.name) + "</span>" +
-        "    </div>" +
-        "    <div class='score-panel'>" +
-        "      <button class='score-btn minus scorer-only'" + disabledAttr + " onclick=\"changeScore('" + matchId + "','A',-1)\">−</button>" +
-        "      <span id='score_" + matchId + "_A' class='score-value'>0</span>" +
-        "      <button class='score-btn scorer-only'" + disabledAttr + " onclick=\"changeScore('" + matchId + "','A',1)\">+</button>" +
-        "    </div>" +
-        "  </div>" +
+        // Combined court view: both teams facing the net, scores at the net line
+        "  <div class='court-view'>" +
 
-        // Team B row
-        "  <div class='team-row'>" +
-        "    <div class='team-left'>" +
-        (t2.logo ? "      <div class='team-logo' style=\"background-image:url('" + escHtml(t2.logo) + "')\"></div>" : "") +
-        "      <span class='team-name'>" + escHtml(t2.name) + "</span>" +
+        // Top half — Team A (front row nearest net, rear row at top)
+        "    <div class='court-half court-top' id='courtHalfA_" + matchId + "'>" +
+        "      <div class='court-team-strip'>" + escHtml(t1.name) + "</div>" +
+        "      <div id='rotCourt_" + matchId + "_A' class='rotation-court'></div>" +
+        "      <div class='court-half-btns scorer-only'>" +
+        "        <button class='btn-rotate' onclick=\"manualRotate('" + matchId + "','A')\">↻ Rotate</button>" +
+        "        <button class='btn-rotate' onclick=\"undoLastPoint('" + matchId + "','A')\">↺ Undo " + escHtml(t1.name) + "</button>" +
+        "      </div>" +
         "    </div>" +
-        "    <div class='score-panel'>" +
-        "      <button class='score-btn minus scorer-only'" + disabledAttr + " onclick=\"changeScore('" + matchId + "','B',-1)\">−</button>" +
-        "      <span id='score_" + matchId + "_B' class='score-value'>0</span>" +
-        "      <button class='score-btn scorer-only'" + disabledAttr + " onclick=\"changeScore('" + matchId + "','B',1)\">+</button>" +
+
+        // Net row — scores on left (A) and right (B), set info in centre
+        "    <div class='court-net-row' id='courtNet_" + matchId + "'>" +
+        "      <div class='court-net-score court-net-left'>" +
+        "        <button class='score-btn minus scorer-only'" + disabledAttr + " onclick=\"changeScore('" + matchId + "','A',-1)\">−</button>" +
+        "        <span id='score_" + matchId + "_A' class='net-score-num'>0</span>" +
+        "        <button class='score-btn scorer-only'" + disabledAttr + " onclick=\"changeScore('" + matchId + "','A',1)\">+</button>" +
+        "      </div>" +
+        "      <div class='court-net-divider'>" +
+        "        <span class='net-label'>NET</span>" +
+        "        <span id='setIndicator_" + matchId + "' class='net-set-label'>Set 1</span>" +
+        "      </div>" +
+        "      <div class='court-net-score court-net-right'>" +
+        "        <button class='score-btn minus scorer-only'" + disabledAttr + " onclick=\"changeScore('" + matchId + "','B',-1)\">−</button>" +
+        "        <span id='score_" + matchId + "_B' class='net-score-num'>0</span>" +
+        "        <button class='score-btn scorer-only'" + disabledAttr + " onclick=\"changeScore('" + matchId + "','B',1)\">+</button>" +
+        "      </div>" +
         "    </div>" +
-        "  </div>" +
 
-        // Current set indicator
-        "  <div style='text-align:center;margin:4px 0 8px;font-size:0.72rem;color:var(--text-dim);font-family:var(--mono);'>" +
-        "    <span id='setIndicator_" + matchId + "'>Set 1 · First to 15 (2-point lead)</span>" +
-        "  </div>" +
+        // Bottom half — Team B (front row nearest net, rear row at bottom)
+        "    <div class='court-half court-bottom' id='courtHalfB_" + matchId + "'>" +
+        "      <div id='rotCourt_" + matchId + "_B' class='rotation-court'></div>" +
+        "      <div class='court-team-strip'>" + escHtml(t2.name) + "</div>" +
+        "      <div class='court-half-btns scorer-only'>" +
+        "        <button class='btn-rotate' onclick=\"manualRotate('" + matchId + "','B')\">↻ Rotate</button>" +
+        "        <button class='btn-rotate' onclick=\"undoLastPoint('" + matchId + "','B')\">↺ Undo " + escHtml(t2.name) + "</button>" +
+        "      </div>" +
+        "    </div>" +
 
-        // Rotations
-        "  <div class='rotation-section'>" +
-        "    <div class='rotation-label'>" + escHtml(t1.name) + " Rotation</div>" +
-        "    <div id='rotCourt_" + matchId + "_A' class='rotation-court'></div>" +
-        "    <button class='btn-rotate scorer-only' onclick=\"manualRotate('" + matchId + "','A')\">↻ Rotate</button>" +
-        "    <button class='btn-rotate scorer-only' onclick=\"undoLastPoint('" + matchId + "','A')\">↺ Undo " + escHtml(t1.name) + " Point</button>" +
-        "  </div>" +
-        "  <div class='rotation-section'>" +
-        "    <div class='rotation-label'>" + escHtml(t2.name) + " Rotation</div>" +
-        "    <div id='rotCourt_" + matchId + "_B' class='rotation-court'></div>" +
-        "    <button class='btn-rotate scorer-only' onclick=\"manualRotate('" + matchId + "','B')\">↻ Rotate</button>" +
-        "    <button class='btn-rotate scorer-only' onclick=\"undoLastPoint('" + matchId + "','B')\">↺ Undo " + escHtml(t2.name) + " Point</button>" +
+        // Swap button (scorer only)
+        "    <div class='court-footer scorer-only'>" +
+        "      <button class='court-swap-btn' onclick=\"swapCourtView('" + matchId + "')\">⇄ Swap Teams</button>" +
+        "    </div>" +
+
         "  </div>" +
 
         // Server selection (scorer only)

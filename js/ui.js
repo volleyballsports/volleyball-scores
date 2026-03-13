@@ -35,7 +35,7 @@ function refreshScoreUI(matchId) {
             var aScore = m.scoreA || 0;
             var bScore = m.scoreB || 0;
             var deuce = (aScore >= 14 && bScore >= 14);
-            indEl.textContent = "Set " + curSet + (deuce ? " · Deuce – play to 2-point lead" : " · First to 15 (2-point lead)");
+            indEl.textContent = "Set " + curSet + (deuce ? " · 2-pt lead" : " · to 15");
         }
     }
 

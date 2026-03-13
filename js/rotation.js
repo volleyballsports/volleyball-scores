@@ -4,6 +4,36 @@
 
 var touchDragOverElement = null;
 var tapSwapState = null; // { matchId, teamKey, courtPos } — first cell of a tap-to-swap
+var courtSwapped = {}; // matchId -> bool: whether Team B is displayed on top
+
+function swapCourtView(matchId) {
+    courtSwapped[matchId] = !courtSwapped[matchId];
+    var swapped = courtSwapped[matchId];
+
+    var halfA = document.getElementById('courtHalfA_' + matchId);
+    var halfB = document.getElementById('courtHalfB_' + matchId);
+    var netEl = document.getElementById('courtNet_' + matchId);
+    if (!halfA || !halfB || !netEl) return;
+    var courtView = netEl.parentElement;
+
+    // Remove both halves, then re-insert in the desired order around the net
+    courtView.removeChild(halfA);
+    courtView.removeChild(halfB);
+
+    if (swapped) {
+        // B on top (before net), A on bottom (after net)
+        courtView.insertBefore(halfB, netEl);
+        courtView.insertBefore(halfA, netEl.nextSibling);
+        halfB.classList.remove('court-bottom'); halfB.classList.add('court-top');
+        halfA.classList.remove('court-top');    halfA.classList.add('court-bottom');
+    } else {
+        // A on top (before net), B on bottom (after net)
+        courtView.insertBefore(halfA, netEl);
+        courtView.insertBefore(halfB, netEl.nextSibling);
+        halfA.classList.remove('court-bottom'); halfA.classList.add('court-top');
+        halfB.classList.remove('court-top');    halfB.classList.add('court-bottom');
+    }
+}
 
 function renderRotation(matchId, teamKey) {
     var m = matchData[matchId]; if (!m) return;
