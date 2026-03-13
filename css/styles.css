@@ -479,15 +479,15 @@ body::before {
     overflow: hidden;
     text-overflow: ellipsis;
 }
-/* Left team: name on far left, text reads upward, border on right */
-.court-left .court-team-side {
-    transform: rotate(180deg);
-    border-right: 1px solid var(--border);
-}
-/* Right team: name on far right, text reads downward, border on left */
-.court-right .court-team-side {
-    border-left: 1px solid var(--border);
-}
+/* Left half: team label on outer-left, score buttons on inner-right (near net) */
+.court-left .court-team-side  { order: 1; transform: rotate(180deg); border-right: 1px solid var(--border); }
+.court-left .court-half-grid  { order: 2; }
+.court-left .court-net-score  { order: 3; }
+
+/* Right half: score buttons on inner-left (near net), team label on outer-right */
+.court-right .court-team-side { order: 3; border-left: 1px solid var(--border); }
+.court-right .court-half-grid { order: 2; }
+.court-right .court-net-score { order: 1; }
 
 /* Rotation grid wrapper inside each half */
 .court-half-grid {
