@@ -81,7 +81,7 @@ function changeScore(matchId, teamKey, delta) {
         }
         checkSetComplete(matchId);
     } else {
-        undoLastPoint(matchId, teamKey);
+        undoLastPoint(matchId);
         return;
     }
 
@@ -126,16 +126,12 @@ function checkSetComplete(matchId) {
     m.serverReminder = "";
 }
 
-function undoLastPoint(matchId, teamKey) {
+function undoLastPoint(matchId) {
     if (!isScorer) return;
     var m = matchData[matchId]; if (!m) return;
     var history = m.rallyHistory || [];
     if (!history.length) return;
     var last = history[history.length - 1];
-    if (teamKey && last.scoringTeam !== teamKey) {
-        alert("Most recent point belongs to the other team. Undo that side first.");
-        return;
-    }
     history.pop();
     m.scoreA = last.prevScoreA;
     m.scoreB = last.prevScoreB;
