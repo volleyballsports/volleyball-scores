@@ -434,19 +434,41 @@ body::before {
 
 /* Each team occupies one half of the court */
 .court-half {
-    padding: 8px 6px 4px;
     background: var(--surface2);
 }
 
-/* Team label strip */
-.court-team-strip {
-    font-size: 0.72rem;
+/* Flex row: vertical team name label on left, rotation grid on right */
+.court-half-inner {
+    display: flex;
+    align-items: stretch;
+}
+
+/* Vertical team name label */
+.court-team-side {
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    font-size: 0.7rem;
     font-weight: 700;
     color: var(--text-dim);
     text-transform: uppercase;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.1em;
     text-align: center;
-    padding: 2px 0 5px;
+    padding: 8px 5px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    flex-shrink: 0;
+    min-width: 24px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-height: 120px;
+}
+
+/* Rotation grid wrapper inside each half */
+.court-half-grid {
+    flex: 1;
+    padding: 6px 4px 4px;
+    min-width: 0;
 }
 
 /* Rotation grid inside court half — override inline-block default */

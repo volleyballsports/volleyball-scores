@@ -92,11 +92,15 @@ function buildMatchCardHTML(matchId, t1Index, t2Index, isFinal) {
 
         // Top half — Team A (front row nearest net, rear row at top)
         "    <div class='court-half court-top' id='courtHalfA_" + matchId + "'>" +
-        "      <div class='court-team-strip'>" + escHtml(t1.name) + "</div>" +
-        "      <div id='rotCourt_" + matchId + "_A' class='rotation-court'></div>" +
-        "      <div class='court-half-btns scorer-only'>" +
-        "        <button class='btn-rotate' onclick=\"manualRotate('" + matchId + "','A')\">↻ Rotate</button>" +
-        "        <button class='btn-rotate' onclick=\"undoLastPoint('" + matchId + "','A')\">↺ Undo " + escHtml(t1.name) + "</button>" +
+        "      <div class='court-half-inner'>" +
+        "        <div class='court-team-side'>" + escHtml(t1.name) + "</div>" +
+        "        <div class='court-half-grid'>" +
+        "          <div id='rotCourt_" + matchId + "_A' class='rotation-court'></div>" +
+        "          <div class='court-half-btns scorer-only'>" +
+        "            <button class='btn-rotate' onclick=\"manualRotate('" + matchId + "','A')\">↻ Rotate</button>" +
+        "            <button class='btn-rotate' onclick=\"undoLastPoint('" + matchId + "','A')\">↺ Undo " + escHtml(t1.name) + "</button>" +
+        "          </div>" +
+        "        </div>" +
         "      </div>" +
         "    </div>" +
 
@@ -120,11 +124,15 @@ function buildMatchCardHTML(matchId, t1Index, t2Index, isFinal) {
 
         // Bottom half — Team B (front row nearest net, rear row at bottom)
         "    <div class='court-half court-bottom' id='courtHalfB_" + matchId + "'>" +
-        "      <div id='rotCourt_" + matchId + "_B' class='rotation-court'></div>" +
-        "      <div class='court-team-strip'>" + escHtml(t2.name) + "</div>" +
-        "      <div class='court-half-btns scorer-only'>" +
-        "        <button class='btn-rotate' onclick=\"manualRotate('" + matchId + "','B')\">↻ Rotate</button>" +
-        "        <button class='btn-rotate' onclick=\"undoLastPoint('" + matchId + "','B')\">↺ Undo " + escHtml(t2.name) + "</button>" +
+        "      <div class='court-half-inner'>" +
+        "        <div class='court-team-side'>" + escHtml(t2.name) + "</div>" +
+        "        <div class='court-half-grid'>" +
+        "          <div id='rotCourt_" + matchId + "_B' class='rotation-court'></div>" +
+        "          <div class='court-half-btns scorer-only'>" +
+        "            <button class='btn-rotate' onclick=\"manualRotate('" + matchId + "','B')\">↻ Rotate</button>" +
+        "            <button class='btn-rotate' onclick=\"undoLastPoint('" + matchId + "','B')\">↺ Undo " + escHtml(t2.name) + "</button>" +
+        "          </div>" +
+        "        </div>" +
         "      </div>" +
         "    </div>" +
 
