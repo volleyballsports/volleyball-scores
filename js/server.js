@@ -39,7 +39,6 @@ function setServer(matchId, teamKey, playerName) {
     else m.serverPlayerB = playerName;
     m.nextServerTeam = null;
 
-    applyServerSelectionCooldown(matchId, teamKey, playerName);
     m.serverReminder = "";
 
     // Keep the court visualization in sync immediately when server is picked
@@ -77,23 +76,14 @@ function renderServerReminder(matchId) {
     reminderEl.className = "server-rotation-reminder" + (msg ? " show" : "");
 }
 
-function applyServerSelectionCooldown(matchId, teamKey, selectedPlayer) {
-    if (!serverRotationEnabled) return;
-    var m = matchData[matchId]; if (!m) return;
-    var cooldowns = teamKey === "A" ? (m.serverCooldownA || {}) : (m.serverCooldownB || {});
-    Object.keys(cooldowns).forEach(function (name) {
-        if (name === selectedPlayer) return;
-        cooldowns[name] = Math.max(0, (cooldowns[name] || 0) - 1);
-        if (cooldowns[name] <= 0) delete cooldowns[name];
-    });
-    if (teamKey === "A") m.serverCooldownA = cooldowns;
-    else m.serverCooldownB = cooldowns;
-}
-
-function applyServerBreakCooldown(matchId, teamKey, serverName) {
+function applyServeCompletionCooldown(matchId, teamKey, serverName) {
     if (!serverRotationEnabled || !serverName) return;
     var m = matchData[matchId]; if (!m) return;
     var cooldowns = teamKey === "A" ? (m.serverCooldownA || {}) : (m.serverCooldownB || {});
+    Object.keys(cooldowns).forEach(function (name) {
+        cooldowns[name] = Math.max(0, (cooldowns[name] || 0) - 1);
+        if (cooldowns[name] <= 0) delete cooldowns[name];
+    });
     cooldowns[serverName] = 5;
     if (teamKey === "A") m.serverCooldownA = cooldowns;
     else m.serverCooldownB = cooldowns;

@@ -55,7 +55,7 @@ function changeScore(matchId, teamKey, delta) {
         if (sideOut) {
             var brokenServerTeam = m.serverTeam;
             var brokenServerPlayer = brokenServerTeam === "A" ? m.serverPlayerA : m.serverPlayerB;
-            applyServerBreakCooldown(matchId, brokenServerTeam, brokenServerPlayer);
+            applyServeCompletionCooldown(matchId, brokenServerTeam, brokenServerPlayer);
 
             if (positionRotationEnabled) {
                 rotateTeamPositionsInternal(matchId, teamKey);
