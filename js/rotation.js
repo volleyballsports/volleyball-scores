@@ -289,9 +289,7 @@ function onRotationTouchEnd(event) {
 function manualRotate(matchId, teamKey) {
     if (!isScorer) return;
     var m = matchData[matchId]; if (!m) return;
-    var rot = (teamKey === "A") ? m.rotationA : m.rotationB;
-    rot = rotateArray(rot);
-    if (teamKey === "A") m.rotationA = rot; else m.rotationB = rot;
+    rotateTeamPositionsInternal(matchId, teamKey);
 
     // NOTE: Do NOT change m.serverTeam here — manual rotation is only for
     // arranging player positions, not for declaring who's serving.
@@ -299,25 +297,16 @@ function manualRotate(matchId, teamKey) {
 
     renderRotation(matchId, teamKey);
     highlightServerButton(matchId);
+    updateServerWarnings(matchId);
     saveToFirebase();
 }
 
 // Internal rotate that doesn't trigger a separate save
-function manualRotateInternal(matchId, teamKey) {
+function rotateTeamPositionsInternal(matchId, teamKey) {
     var m = matchData[matchId]; if (!m) return;
     var rot = (teamKey === "A") ? m.rotationA : m.rotationB;
     rot = rotateArray(rot);
     if (teamKey === "A") m.rotationA = rot; else m.rotationB = rot;
 
-    var players = (teamKey === "A")
-        ? (m.activePlayersA || teams[m.team1Index].players || [])
-        : (m.activePlayersB || teams[m.team2Index].players || []);
-    var pos1Num = rot[0];
-    var newServerPlayer = players[pos1Num - 1] || null;
-    m.serverTeam = teamKey;
-    if (teamKey === "A") m.serverPlayerA = newServerPlayer;
-    else m.serverPlayerB = newServerPlayer;
-
     renderRotation(matchId, teamKey);
-    highlightServerButton(matchId);
 }

@@ -11,8 +11,11 @@ function initializeTournament() {
         return;
     }
 
-    var autoRotateCheckbox = document.getElementById("autoRotateToggle");
-    autoRotate = !!(autoRotateCheckbox && autoRotateCheckbox.checked);
+    var positionRotationCheckbox = document.getElementById("positionRotationToggle");
+    positionRotationEnabled = !!(positionRotationCheckbox && positionRotationCheckbox.checked);
+
+    var serverRotationCheckbox = document.getElementById("serverRotationToggle");
+    serverRotationEnabled = !!(serverRotationCheckbox && serverRotationCheckbox.checked);
 
     var rrSelect = document.getElementById("rrFormat");
     var rounds = rrSelect ? (parseInt(rrSelect.value, 10) || 1) : 1;

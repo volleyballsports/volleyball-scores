@@ -14,6 +14,9 @@ function createEmptyMatchState(matchId, t1, t2) {
         serverTeam: null,
         serverPlayerA: null,
         serverPlayerB: null,
+        serverReminder: "",
+        serverCooldownA: {},
+        serverCooldownB: {},
         rallyCounter: 0,
         serviceLog: [],
         subsA: [],
@@ -42,6 +45,9 @@ function ensureSetState(matchId) {
     if (m.setsWonB === undefined) m.setsWonB = 0;
     if (!m.sets) m.sets = [];
     if (m.matchComplete === undefined) m.matchComplete = false;
+    if (m.serverReminder === undefined) m.serverReminder = "";
+    if (!m.serverCooldownA) m.serverCooldownA = {};
+    if (!m.serverCooldownB) m.serverCooldownB = {};
 }
 
 // Ensure per-match rosters are initialized (call before using activePlayers)
@@ -152,6 +158,7 @@ function rebuildAllMatchUI() {
         restoreCourtSwap(matchId);
         refreshScoreUI(matchId);
         renderServerButtons(matchId);
+        renderServerReminder(matchId);
         renderServiceLogTable(matchId);
         updateSubUI(matchId, "A");
         updateSubUI(matchId, "B");
@@ -240,6 +247,7 @@ function rebuildAllMatchUI() {
                 renderRotation(FINAL_MATCH_ID, "B");
                 refreshScoreUI(FINAL_MATCH_ID);
                 renderServerButtons(FINAL_MATCH_ID);
+                renderServerReminder(FINAL_MATCH_ID);
                 renderServiceLogTable(FINAL_MATCH_ID);
             }
             finalLabel.textContent = teams[mf.team1Index].name + " vs " + teams[mf.team2Index].name;

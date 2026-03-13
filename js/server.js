@@ -5,12 +5,58 @@
 function setServer(matchId, teamKey, playerName) {
     if (!isScorer) return;
     var m = matchData[matchId]; if (!m) return;
+
+    if (serverRotationEnabled) {
+        var cooldowns = teamKey === "A" ? (m.serverCooldownA || {}) : (m.serverCooldownB || {});
+        var remaining = cooldowns[playerName] || 0;
+        if (remaining > 0) {
+            alert(playerName + " must wait for " + remaining + " more server change" + (remaining === 1 ? "" : "s") + " before serving again.");
+            return;
+        }
+    }
+
     m.serverTeam = teamKey;
     if (teamKey === "A") m.serverPlayerA = playerName;
     else m.serverPlayerB = playerName;
+
+    applyServerSelectionCooldown(matchId, teamKey, playerName);
+    m.serverReminder = "";
+
     highlightServerButton(matchId);
     updateServerWarnings(matchId);
+    renderServerReminder(matchId);
     saveToFirebase();
+}
+
+function renderServerReminder(matchId) {
+    var m = matchData[matchId]; if (!m) return;
+    var reminderEl = document.getElementById("serverReminder_" + matchId);
+    if (!reminderEl) return;
+    var msg = m.serverReminder || "";
+    reminderEl.textContent = msg;
+    reminderEl.className = "server-rotation-reminder" + (msg ? " show" : "");
+}
+
+function applyServerSelectionCooldown(matchId, teamKey, selectedPlayer) {
+    if (!serverRotationEnabled) return;
+    var m = matchData[matchId]; if (!m) return;
+    var cooldowns = teamKey === "A" ? (m.serverCooldownA || {}) : (m.serverCooldownB || {});
+    Object.keys(cooldowns).forEach(function (name) {
+        if (name === selectedPlayer) return;
+        cooldowns[name] = Math.max(0, (cooldowns[name] || 0) - 1);
+        if (cooldowns[name] <= 0) delete cooldowns[name];
+    });
+    if (teamKey === "A") m.serverCooldownA = cooldowns;
+    else m.serverCooldownB = cooldowns;
+}
+
+function applyServerBreakCooldown(matchId, teamKey, serverName) {
+    if (!serverRotationEnabled || !serverName) return;
+    var m = matchData[matchId]; if (!m) return;
+    var cooldowns = teamKey === "A" ? (m.serverCooldownA || {}) : (m.serverCooldownB || {});
+    cooldowns[serverName] = 5;
+    if (teamKey === "A") m.serverCooldownA = cooldowns;
+    else m.serverCooldownB = cooldowns;
 }
 
 function getServerPositionWarning(matchId, teamKey, playerName) {
@@ -59,6 +105,7 @@ function renderServerButtons(matchId) {
     }
     highlightServerButton(matchId);
     updateServerWarnings(matchId);
+    renderServerReminder(matchId);
 }
 
 function highlightServerButton(matchId) {

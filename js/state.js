@@ -10,7 +10,8 @@ var teams = [
 
 var schedule = [];
 var matchData = {};
-var autoRotate = true;
+var positionRotationEnabled = true;
+var serverRotationEnabled = false;
 var activeMatchId = null;  // which match is currently being played (set by scorer)
 var isScorer = false;
 var localUpdate = false;   // flag to skip listener re-renders during local writes

@@ -1016,3 +1016,14 @@ body:not(.viewer-mode) .edit-teams-btn { display: block; }
 .server-position-warning.show {
     display: block;
 }
+
+.server-rotation-reminder {
+    margin-top: 6px;
+    font-size: 0.74rem;
+    color: var(--text-dim);
+    display: none;
+}
+
+.server-rotation-reminder.show {
+    display: block;
+}
