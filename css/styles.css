@@ -514,6 +514,7 @@ body::before {
 .compact-set-chip { font-family: var(--mono); font-size: 0.72rem; color: var(--text-dim); background: var(--surface2); border: 1px solid var(--border); border-radius: 999px; padding: 2px 8px; }
 .compact-set-chip.active { color: var(--accent); border-color: var(--accent); }
 .compact-set-chip.empty { opacity: 0.8; }
+.compact-winner-tick { font-size: 0.7rem; color: var(--green); font-weight: 700; margin-left: 4px; flex-shrink: 0; }
 
 /* Active match label in viewer mode */
 .active-match-label { font-size: 0.72rem; font-weight: 600; color: var(--accent); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px; }

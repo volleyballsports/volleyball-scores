@@ -35,6 +35,9 @@ function buildMatchSummaryHTML(matchId, t1Index, t2Index, isFinal) {
         }).join("")
         : "<span class='compact-set-chip empty'>No set scores yet</span>";
 
+    var t1Won = m.matchComplete && swA > swB;
+    var t2Won = m.matchComplete && swB > swA;
+
     return (
         "<div class='compact-match-card " + summaryClass + "'>" +
         "  <div class='compact-match-info'>" +
@@ -42,9 +45,11 @@ function buildMatchSummaryHTML(matchId, t1Index, t2Index, isFinal) {
         "    <div class='compact-teams'>" +
         "      <div class='compact-team-row'>" +
         "        <span class='compact-team-name'>" + escHtml(t1.name) + "</span>" +
+        (t1Won ? "<span class='compact-winner-tick'>✓</span>" : "") +
         "      </div>" +
         "      <div class='compact-team-row'>" +
         "        <span class='compact-team-name'>" + escHtml(t2.name) + "</span>" +
+        (t2Won ? "<span class='compact-winner-tick'>✓</span>" : "") +
         "      </div>" +
         "    </div>" +
         "    <div class='compact-set-history'>" + allSetScores + "</div>" +
