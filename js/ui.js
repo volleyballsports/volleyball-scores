@@ -25,7 +25,7 @@ function refreshScoreUI(matchId) {
         }).join("");
     }
 
-    // Update current set indicator
+    // Update current set indicator (net column)
     var indEl = document.getElementById("setIndicator_" + matchId);
     if (indEl) {
         if (m.matchComplete) {
@@ -37,6 +37,12 @@ function refreshScoreUI(matchId) {
             var deuce = (aScore >= 14 && bScore >= 14);
             indEl.textContent = "Set " + curSet + (deuce ? " · 2-pt lead" : " · to 15");
         }
+    }
+
+    // Update set number in score strip center
+    var scoreSetEl = document.getElementById("scoreSetNum_" + matchId);
+    if (scoreSetEl) {
+        scoreSetEl.textContent = m.matchComplete ? "Final" : "Set " + (m.currentSet || 1);
     }
 
     // Show/hide match complete banner

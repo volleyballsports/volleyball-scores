@@ -138,6 +138,7 @@ function buildMatchCardHTML(matchId, t1Index, t2Index, isFinal) {
         "          <button class='score-btn minus'" + disabledAttr + " onclick=\"changeScore('" + matchId + "','A',-1)\">−</button>" +
         "        </div>" +
         "      </div>" +
+        "      <div class='court-score-set' id='scoreSetNum_" + matchId + "'>Set 1</div>" +
         "      <div class='court-score-team'>" +
         "        <div class='court-score-value' id='score_" + matchId + "_B'>0</div>" +
         "        <div class='court-score-controls scorer-only'>" +

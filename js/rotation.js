@@ -14,6 +14,7 @@ function applyCourtSwap(matchId, swapped) {
     var netEl = document.getElementById('courtNet_' + matchId);
     if (!halfA || !halfB || !netEl) return;
     var courtView = netEl.parentElement; // .court-main
+    var outerCourtView = courtView.parentElement; // .court-view
 
     courtView.removeChild(halfA);
     courtView.removeChild(halfB);
@@ -30,6 +31,48 @@ function applyCourtSwap(matchId, swapped) {
         courtView.insertBefore(halfB, netEl.nextSibling);
         halfA.classList.remove('court-right'); halfA.classList.add('court-left');
         halfB.classList.remove('court-left');  halfB.classList.add('court-right');
+    }
+
+    // Swap team header labels to match court side
+    var teamHeader = outerCourtView.querySelector('.court-team-header');
+    if (teamHeader && teamHeader.children.length === 2) {
+        var headerChildren = [teamHeader.children[0], teamHeader.children[1]];
+        teamHeader.removeChild(headerChildren[0]);
+        teamHeader.removeChild(headerChildren[1]);
+        if (swapped) {
+            teamHeader.appendChild(headerChildren[1]);
+            teamHeader.appendChild(headerChildren[0]);
+        } else {
+            teamHeader.appendChild(headerChildren[0]);
+            teamHeader.appendChild(headerChildren[1]);
+        }
+    }
+
+    // Swap score values and +/- buttons to match court side
+    var scoreStrip = outerCourtView.querySelector('.court-score-strip');
+    var scoreElemA = document.getElementById('score_' + matchId + '_A');
+    var scoreElemB = document.getElementById('score_' + matchId + '_B');
+    if (scoreStrip && scoreElemA && scoreElemB) {
+        var scoreTeamA = scoreElemA.parentElement;
+        var scoreTeamB = scoreElemB.parentElement;
+        var setIndicator = scoreStrip.querySelector('.court-score-set');
+        scoreStrip.removeChild(scoreTeamA);
+        scoreStrip.removeChild(scoreTeamB);
+        if (swapped) {
+            if (setIndicator) {
+                scoreStrip.insertBefore(scoreTeamB, setIndicator);
+            } else {
+                scoreStrip.insertBefore(scoreTeamB, scoreStrip.firstChild);
+            }
+            scoreStrip.appendChild(scoreTeamA);
+        } else {
+            if (setIndicator) {
+                scoreStrip.insertBefore(scoreTeamA, setIndicator);
+            } else {
+                scoreStrip.insertBefore(scoreTeamA, scoreStrip.firstChild);
+            }
+            scoreStrip.appendChild(scoreTeamB);
+        }
     }
 
     renderRotation(matchId, 'A');

@@ -79,9 +79,7 @@ function changeScore(matchId, teamKey, delta) {
     refreshScoreUI(matchId);
     renderRotation(matchId, "A");
     renderRotation(matchId, "B");
-    highlightServerButton(matchId);
-    updateServerWarnings(matchId);
-    renderServerReminder(matchId);
+    renderServerButtons(matchId);
     updateStandings();
     renderServiceLogTable(matchId);
     saveToFirebase();
@@ -153,9 +151,7 @@ function undoLastPoint(matchId) {
     refreshScoreUI(matchId);
     renderRotation(matchId, "A");
     renderRotation(matchId, "B");
-    highlightServerButton(matchId);
-    updateServerWarnings(matchId);
-    renderServerReminder(matchId);
+    renderServerButtons(matchId);
     updateStandings();
     renderServiceLogTable(matchId);
     saveToFirebase();
