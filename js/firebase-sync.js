@@ -35,22 +35,31 @@ function saveToFirebase() {
         activeMatchId: activeMatchId,
         timestamp: firebase.database.ServerValue.TIMESTAMP
     };
+    var safeState = JSON.parse(JSON.stringify(state));
     pendingWrite = true;
     writeErrorState = false;
     if (isScorer) setConnectionLabel("Syncing…", "connected");
-    dbRef.set(state).then(function () {
-        lastWriteAckAt = Date.now();
-        pendingWrite = false;
-        writeErrorState = false;
-        if (isScorer) setConnectionLabel("Synced", "connected");
-        setTimeout(function () { localUpdate = false; }, 500);
-    }).catch(function (err) {
+    try {
+        dbRef.set(safeState).then(function () {
+            lastWriteAckAt = Date.now();
+            pendingWrite = false;
+            writeErrorState = false;
+            if (isScorer) setConnectionLabel("Synced", "connected");
+            setTimeout(function () { localUpdate = false; }, 500);
+        }).catch(function (err) {
+            console.error("Firebase write error:", err);
+            pendingWrite = false;
+            writeErrorState = true;
+            if (isScorer) setConnectionLabel("Sync issue", "disconnected");
+            localUpdate = false;
+        });
+    } catch (err) {
         console.error("Firebase write error:", err);
         pendingWrite = false;
         writeErrorState = true;
         if (isScorer) setConnectionLabel("Sync issue", "disconnected");
         localUpdate = false;
-    });
+    }
 }
 
 function loadFromFirebase() {
