@@ -71,6 +71,14 @@
 
     <!-- MAIN CONTENT -->
     <div class="container">
+        <!-- THEME SELECTOR -->
+        <div class="theme-selector-row">
+            <select id="themeSelector" class="theme-selector" aria-label="Display theme" onchange="setDisplayTheme(this.value)">
+                <option value="night">🌙 Indoor / Night</option>
+                <option value="day">☀️ Outdoor / Daylight</option>
+            </select>
+        </div>
+
         <div class="header">
             <h1>LPSD Sports India</h1>
             <div class="subtitle">Volleyball Tournament Manager</div>
@@ -134,13 +142,6 @@
             <div id="finalContent"></div>
         </div>
 
-        <!-- THEME SELECTOR -->
-        <div class="theme-selector-row">
-            <select id="themeSelector" class="theme-selector" aria-label="Display theme" onchange="setDisplayTheme(this.value)">
-                <option value="night">🌙 Indoor / Night</option>
-                <option value="day">☀️ Outdoor / Daylight</option>
-            </select>
-        </div>
     </div>
 
     <!-- JavaScript modules (order matters: dependencies load before dependents) -->
