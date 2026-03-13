@@ -42,11 +42,9 @@ function buildMatchSummaryHTML(matchId, t1Index, t2Index, isFinal) {
         "    <div class='compact-teams'>" +
         "      <div class='compact-team-row'>" +
         "        <span class='compact-team-name'>" + escHtml(t1.name) + "</span>" +
-        "        <span class='compact-score'>" + sA + "</span>" +
         "      </div>" +
         "      <div class='compact-team-row'>" +
         "        <span class='compact-team-name'>" + escHtml(t2.name) + "</span>" +
-        "        <span class='compact-score'>" + sB + "</span>" +
         "      </div>" +
         "    </div>" +
         "    <div class='compact-set-history'>" + allSetScores + "</div>" +

@@ -499,8 +499,8 @@ body::before {
 }
 
 .compact-match-card:hover { border-color: var(--accent); }
-.compact-match-card.complete { border-color: color-mix(in srgb, var(--green) 35%, var(--border)); background: color-mix(in srgb, var(--green) 9%, var(--surface)); }
-.compact-match-card.complete .compact-status { color: var(--green); font-weight: 700; }
+.compact-match-card.complete { opacity: 0.6; }
+.compact-match-card.complete .compact-status { color: var(--text-dim); font-weight: 600; }
 .compact-match-card.not-started { opacity: 0.92; }
 .compact-match-info { flex: 1; min-width: 0; }
 .compact-match-title { font-size: 0.72rem; font-weight: 600; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
@@ -684,9 +684,6 @@ input[type="checkbox"] { accent-color: var(--accent); }
 .switch-mode-btn:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
 
 .theme-selector {
-    position: fixed;
-    bottom: 60px;
-    right: 16px;
     padding: 6px 10px;
     border-radius: 999px;
     border: 1px solid var(--border);
@@ -695,7 +692,12 @@ input[type="checkbox"] { accent-color: var(--accent); }
     font-family: var(--font);
     font-size: 0.82rem;
     font-weight: 600;
-    z-index: 50;
+}
+
+.theme-selector-row {
+    display: flex;
+    justify-content: center;
+    padding: 16px 0 8px;
 }
 
 
@@ -719,7 +721,6 @@ body.viewer-mode .scorer-only { display: none !important; }
     .compact-sets, .compact-status { font-size: 0.82rem; }
     .container { padding: 12px 10px 96px; }
     .switch-mode-btn { bottom: 12px; right: 10px; }
-    .theme-selector { bottom: 54px; right: 10px; }
 }
 
 /* Edit teams modal */
