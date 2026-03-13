@@ -48,15 +48,16 @@
         </div>
     </div>
 
-    <!-- SWITCH MODE BUTTON -->
-    <button id="switchModeBtn" class="switch-mode-btn" onclick="handleSwitchMode()">
-        Scorer Mode
-    </button>
+    <div class="view-pills-bottom view-pills-main">
+        <button id="switchModeBtn" class="switch-mode-btn" onclick="handleSwitchMode()">
+            Scorer Mode
+        </button>
+        <a href="referee.html" class="view-pill">Referee View</a>
+    </div>
 
     <!-- EDIT TEAMS BUTTON (scorer only) -->
     <button class="edit-teams-btn" onclick="showEditTeamsModal()">✏️ Edit Teams</button>
 
-    <a href="referee.html" class="referee-view-btn">Referee View</a>
 
     <!-- EDIT TEAMS MODAL -->
     <div id="editTeamsModal" class="edit-teams-modal">
