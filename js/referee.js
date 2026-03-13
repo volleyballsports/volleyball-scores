@@ -54,17 +54,24 @@ function renderRefereeView() {
     var viewEl = document.getElementById("refereeView");
 
     var currentMatchId = activeMatchId;
-    if (!currentMatchId || !matchData[currentMatchId]) {
-        var scheduledIds = (schedule || []).map(function (s) { return s.id; });
-        for (var i = 0; i < scheduledIds.length; i++) {
-            if (matchData[scheduledIds[i]]) {
-                currentMatchId = scheduledIds[i];
-                break;
+    if (!currentMatchId || (!matchData[currentMatchId] && !(schedule || []).some(function (s) { return s.id === currentMatchId; }))) {
+        var unresolvedMatchId = null;
+        (schedule || []).some(function (s) {
+            var sm = matchData[s.id];
+            if (!sm || !sm.matchComplete) {
+                unresolvedMatchId = s.id;
+                return true;
             }
+            return false;
+        });
+        if (!unresolvedMatchId) {
+            var allMatchIds = Object.keys(matchData || {});
+            unresolvedMatchId = allMatchIds.length ? allMatchIds[0] : null;
         }
+        currentMatchId = unresolvedMatchId;
     }
 
-    if (!currentMatchId || !matchData[currentMatchId]) {
+    if (!currentMatchId) {
         if (emptyEl) emptyEl.style.display = "block";
         if (viewEl) {
             viewEl.style.display = "none";
@@ -73,7 +80,16 @@ function renderRefereeView() {
         return;
     }
 
-    var m = matchData[currentMatchId];
+    var scheduleMatch = (schedule || []).find(function (s) { return s.id === currentMatchId; }) || null;
+    var m = matchData[currentMatchId] || {
+        team1Index: scheduleMatch ? scheduleMatch.team1Index : 0,
+        team2Index: scheduleMatch ? scheduleMatch.team2Index : 1,
+        scoreA: 0,
+        scoreB: 0,
+        setsWonA: 0,
+        setsWonB: 0,
+        serviceLog: []
+    };
     var leftKey = refereeSwapped ? "B" : "A";
     var rightKey = refereeSwapped ? "A" : "B";
 
