@@ -59,7 +59,27 @@ function substitutePlayer(matchId, teamKey, subName) {
     renderRotation(matchId, teamKey);
     updateSubUI(matchId, teamKey);
     renderServerButtons(matchId);
+    updateViewerBenchUI(matchId);
     saveToFirebase();
+}
+
+
+function updateViewerBenchUI(matchId) {
+    var m = matchData[matchId]; if (!m) return;
+    ensureActivePlayers(matchId);
+
+    ["A", "B"].forEach(function (teamKey) {
+        var container = document.getElementById("viewerBench_" + matchId + "_" + teamKey);
+        if (!container) return;
+        var availSubs = (teamKey === "A") ? m.availableSubsA : m.availableSubsB;
+        if (availSubs && availSubs.length) {
+            container.innerHTML = availSubs.map(function (p) {
+                return "<span class='viewer-bench-player'>" + escHtml(p) + "</span>";
+            }).join("");
+        } else {
+            container.innerHTML = "<span class='viewer-bench-empty'>No bench players</span>";
+        }
+    });
 }
 
 // Render the substitution panel for one team (court players + bench players).

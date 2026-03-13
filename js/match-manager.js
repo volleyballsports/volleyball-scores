@@ -153,6 +153,7 @@ function rebuildAllMatchUI() {
         renderServiceLogTable(matchId);
         updateSubUI(matchId, "A");
         updateSubUI(matchId, "B");
+        updateViewerBenchUI(matchId);
 
         var m = matchData[matchId];
         ["A", "B"].forEach(function (tk) {

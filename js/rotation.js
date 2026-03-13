@@ -55,7 +55,7 @@ function renderRotation(matchId, teamKey) {
 
     function slotLabel(posNum) {
         var name = players[posNum - 1] || ("P" + posNum);
-        return posNum + ": " + name;
+        return name;
     }
 
     var containerId = "rotCourt_" + matchId + "_" + teamKey;

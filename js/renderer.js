@@ -163,6 +163,19 @@ function buildMatchCardHTML(matchId, t1Index, t2Index, isFinal) {
         "    <div id='subLog_" + matchId + "_B' class='sub-log mt-6'></div>" +
         "  </div>" +
 
+        // Viewer bench (available substitutions)
+        "  <div class='mt-16 viewer-bench-section'>" +
+        "    <div class='section-title'>Available Bench</div>" +
+        "    <div class='viewer-bench-grid'>" +
+        "      <div class='viewer-bench-team'>" +
+        "        <strong>" + escHtml(t1.name) + "</strong><div id='viewerBench_" + matchId + "_A' class='viewer-bench-list'></div>" +
+        "      </div>" +
+        "      <div class='viewer-bench-team'>" +
+        "        <strong>" + escHtml(t2.name) + "</strong><div id='viewerBench_" + matchId + "_B' class='viewer-bench-list'></div>" +
+        "      </div>" +
+        "    </div>" +
+        "  </div>" +
+
         // Service log
         "  <div class='mt-16'>" +
         "    <div class='section-title'>Service & Point Log</div>" +
